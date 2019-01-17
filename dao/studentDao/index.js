@@ -1,18 +1,46 @@
 let db = require('../../DB/db');
-exports.getStudentPassword = function (studentId) {
+exports.getStudentPassword = function (studentId,send) {
     let sql=`SELECT pwd FROM student WHERE studentId=${studentId}`;
     db.query(sql,[],function (results,fields) {
         try {
-            return results[0];
+            send(results[0].pwd);
         }catch(err){
             console.log(err);
+            send(false);
         }
     })
 }
 
+exports.getStudentByAccount = function(studentId,send){
+    let sql=`SELECT studentId,name,role FROM student WHERE studentId=${studentId}`;
+    db.query(sql,[],function (results) {
+        try {
+            send(results[0]);
+        }catch (err) {
+            console.log(err);
+            send(results);
+        }
+    })
+}
+
+exports.getCountsByStudentId=function(send,studentId){
+    let sql=`SELECT COUNT(*) AS count FROM student WHERE studentid=${studentId}`;
+    db.query(sql,[],function (results) {
+        try {
+            if(results[0].count>=1){
+                send(false);
+            }else{
+                send(true);
+            }
+        }catch(err){
+            console.log(err);
+            send(false);
+        }
+    })
+}
 
 exports.insertstudentInfo = function (send,info) {
-    let sql =`INSERT INTO student(studentId,name,pwd,sex,collegeId,classId) VALUES (${info.studentId},'${info.name}','${info.pwd}','${info.sex}'),${info.collegeId},${info.classId}))`;
+    let sql =`INSERT INTO student(studentId,name,pwd,sex,collegeId,classId,birthplace,birthday,partySituation,contact,position,other,role) VALUES (${info.studentId},'${info.name}','${info.pwd}','${info.sex}',${info.collegeId},${info.classId},'${info.birthplace}','${info.birthday}','${info.partySituation}','${info.contact}','${info.position}','${info.other}','${info.role}')`;
     db.query(sql,[],function (results,fields) {
         try{
             send(true);
@@ -77,7 +105,7 @@ exports.deletestudentInfo = function(studentId){
 }
 /**
  *author:qxx
- *description:获取指定学生持久层操作
+ *description:获取指定学生信息持久层操作
  *time:2018/12/3
  */
 exports.getSinglestudentInfo = function(send,studentId){
@@ -358,3 +386,4 @@ exports.getAllActivityInfo = function (send) {
         send(result);
     })
 }
+

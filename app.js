@@ -5,8 +5,12 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var studentApi = require('./api/studentApi');
-var adminApi = require('./api/adminApi/select')
+// var studentApi = require('./api/studentApi');
+var adminApi = require('./api/adminApi/index');
+var studentApi = require('./api/studentApi/index');
+var classTeacherApi = require('./api/classteacherApi/index');
+var counselorApi = require('./api/counselorApi/index');
+var loginApi = require('./api/login')
 var app = express();
 
 
@@ -18,8 +22,21 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'static')));
 
-app.use('/', studentApi);
+
+app.all('*', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    // res.header("Access-Control-Allow-Headers", "X-Token");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,x-token");
+    res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+    next();
+});
+
+app.use('/',loginApi);
 app.use('/', adminApi);
+app.use('/', studentApi);
+app.use('/', classTeacherApi);
+app.use('/', counselorApi);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

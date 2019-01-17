@@ -4,45 +4,51 @@ let db = require('../../DB/db');
  *description:获取管理员的密码
  *time:2018/12/3
  */
-exports.getAdminPassword = function (username) {
+exports.getAdminPassword = function (username,send) {
     let sql=`SELECT pwd FROM permission WHERE user=${username}`;
     db.query(sql,[],function (results,fields) {
         try {
-            return results[0];
+            send(results[0].pwd);
         }catch(err){
             console.log(err);
+            send(false);
         }
     })
 }
-
 
 /**
  *author:qxx
- *description:管理员确认寝室申请
+ *description:管理员同意申请寝室长
  *time:2018/12/3
  */
-exports.changeApplyForBedRoomChief = function (studentId) {
+exports.approvedBedRoomChief = function (send,studentId) {
     let sql=`UPDATE bedroomchiefapply SET agree = 1 WHERE studentId=${studentId}`;
     db.query(sql,[],function (results,fields) {
         try {
-            // results = {
-            //     success:true,
-            //     message:'申请已处理！',
-            //     data:null
-            // }
-            return true;
+            send(true);
         }catch (err) {
             console.log(err);
-            // results = {
-            //     success:false,
-            //     message:'申请处理发生了不可预知的错误！',
-            //     data:null
-            // }
-            return false;
+            send(false);
         }
     })
 }
 
+/**
+ *author:qxx
+ *description:管理员不同意申请寝室长
+ *time:2018/12/9
+ */
+exports.notApprovedBedRoomChief = function(send,studentId){
+    let sql=`UPDATE bedroomchiefapply SET agree = -1 WHERE studentId=${studentId}`;
+    db.query(sql,[],function (results,fields) {
+        try {
+            send(true);
+        }catch (err) {
+            console.log(err);
+            send(false);
+        }
+    })
+}
 /**
  *author:qxx
  *description:获取所有申请寝室长的信息
@@ -77,22 +83,46 @@ exports.getAllApplyForBedRoomChief = function(send){
  */
 exports.getAllCollege = function (send) {
     let sql=`SELECT * FROM college`;
+    var result;
     db.query(sql,[],function (results,fields) {
         try {
-            results = {
+            result = {
                 success:true,
                 message:'获取学院信息成功',
                 data:results
             }
         }catch(err){
             console.log(err);
-            results ={
+            result ={
                 success:false,
                 message:'获取信息失败',
                 data:null
             }
-            send(results);
         }
+        send(result);
     })
 }
 
+
+
+exports.getAllClass = function (send,collegeId) {
+    let sql=`SELECT * FROM class WHERE collegeId=${collegeId}`;
+    var result;
+    db.query(sql,[],function (results,fields) {
+        try {
+            result = {
+                success:true,
+                message:'获取班级信息成功',
+                data:results
+            }
+        }catch(err){
+            console.log(err);
+            result ={
+                success:false,
+                message:'获取班级信息失败',
+                data:null
+            }
+        }
+        send(result);
+    })
+}
