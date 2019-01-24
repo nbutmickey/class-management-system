@@ -8,10 +8,10 @@ const router = express.Router();
 // const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-let adminDao = require('../dao/adminDao');
-let studentDao = require('../dao/studentDao');
-let classteacherDao = require('../dao/classteacherDao');
-let counselorDao = require('../dao/counselorDao');
+let adminDao = require('../dao/admin/admin.dao');
+let studentDao = require('../dao/student');
+let classteacherDao = require('../dao/classteacher/classteacher.dao');
+let counselorDao = require('../dao/counselor/counselor.dao');
 
 router.post('/getUserInfo',function (req,res) {
     let token=req.body.token;

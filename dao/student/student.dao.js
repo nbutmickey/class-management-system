@@ -91,14 +91,14 @@ exports.updatestudentAllInfo = function (send,info) {
  *description:删除指定学生信息持久层操作
  *time:2018/12/3
  */
-exports.deletestudentInfo = function(studentId){
+exports.deletestudentInfo = function(send,studentId){
     let sql = `DELETE FROM student WHERE studentId=${studentId}`;
     db.query(sql,[],function (results,fields) {
             try {
-                return true;
+                send(true);
             }catch(err){
                 console.log(err);
-                return false;
+                send(false);
             }
         }
     )
@@ -112,21 +112,10 @@ exports.getSinglestudentInfo = function(send,studentId){
     let sql = `SELECT * FROM student WHERE studentId=${studentId}`;
     db.query(sql,[],function (results,fields) {
             try {
-                results = {
-                    success:true,
-                    message:'获取学生信息成功',
-                    data:results[0]
-                }
-
+                send(results);
             }catch(err){
-                console.log(err);
-                results = {
-                    success:false,
-                    message:'获取学生信息失败',
-                    data:null
-                }
+                send(results=='error')
             }
-            send(results);
         }
     )
 }
@@ -138,21 +127,13 @@ exports.getSinglestudentInfo = function(send,studentId){
 exports.getAllstudentInfo = function(send){
     let sql = `SELECT * FROM student`;
     db.query(sql,[],function (results,fields) {
-            try {
-                results = {
-                    success:true,
-                    message:'获取所有学生信息成功',
-                    data:results
-                }
-            }catch(err){
-                console.log(err);
-                results = {
-                    success:false,
-                    message:'获取所有学生信息失败',
-                    data:null
-                }
-            }
-        send(results);
+        try {
+            send(results);
+        }catch(err){
+            console.log(err);
+            results='error'
+            send(results)
+        }
         }
     )
 }
@@ -169,6 +150,8 @@ exports.queryBedRoomChiefCount = function(send,bedRoomId) {
             send(results[0].count)
         }catch(err){
             console.log(err);
+            results='error'
+            send(results);
         }
     })
 }
@@ -182,20 +165,11 @@ exports.applyForBedRoomChief = function (send,studentId,bedRoomId) {
     let sql=`INSERT INTO bedroomchiefapply(studentId,agree,bedRoomId) VALUES (${studentId},0,${bedRoomId})`;
     db.query(sql,[],function (results,fields) {
         try {
-            results = {
-                success:true,
-                message:'申请已提交，等待管理员处理中。。。',
-                data:null
-            }
-        }catch (err) {
+            send(true);
+        }catch(err){
             console.log(err);
-            results = {
-                success:false,
-                message:'发生了不可预知的错误！',
-                data:null
-            }
+            send(false);
         }
-        send(results);
     })
 }
 
@@ -205,7 +179,7 @@ exports.applyForBedRoomChief = function (send,studentId,bedRoomId) {
  *time:2018/12/4
  */
 exports.applyForPoor = function (send,info) {
-    let sql=`INSERT INTO poorstudentapply(studentId,agree,degree,reason) VALUES(${info.studentId},${info.agree},'${info.degree}','${info.reason}')`;
+    let sql=`INSERT INTO poorstudentapply(studentId,agree,degree,reason) VALUES(${info.studentId},1,'${info.degree}','${info.reason}')`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true)
@@ -223,23 +197,13 @@ exports.applyForPoor = function (send,info) {
  */
 exports.getAllPoorInfo = function (send) {
     let sql=`SELECT * FROM poorstudentapply`;
-    let result;
     db.query(sql,[],function (results,fields) {
         try {
-            result={
-                success:true,
-                message:'获取贫困生信息成功!',
-                data:results
-            }
+            send(true);
         }catch (err) {
             console.log(err);
-            result={
-                success:false,
-                message:'获取贫困生信息失败!',
-                data:null
-            }
+            send(false)
         }
-        send(result);
     })
 }
 
@@ -252,8 +216,9 @@ exports.insertAwardInfo = function (send,info) {
     let sql=`INSERT INTO awardinformation(studentId,awardTime,awardName) VALUES(${info.studentId},'${info.awardTime}','${info.awardName}')`;
     db.query(sql,[],function (results,fields) {
         try {
-            return true;
+            send(true);
         }catch(err){
+            console.log(err);
             send(false);
         }
     })
@@ -265,24 +230,15 @@ exports.insertAwardInfo = function (send,info) {
  *time:2018/12/5
  */
 exports.getSingleStuAwardInfo = function (send,studentId) {
-    let sql=`SELECT * FROM awardinformation WHERE studentId=${studentId}`;
-    let result;
+    let sql=`SELECT awardName,awardTime,awardAgency FROM awardinformation WHERE studentId=${studentId}`;
     db.query(sql,[],function (results,fields) {
         try {
-            result={
-                success:true,
-                message:'获取全部获奖信息成功!',
-                data:results
-            }
-        }catch (err) {
+            send(results);
+        }catch(err){
             console.log(err);
-            result={
-                success:false,
-                message:'获取全部获奖信息失败!',
-                data:null
-            }
+            results='error'
+            send(results)
         }
-        send(result);
     })
 }
 /**
@@ -292,23 +248,14 @@ exports.getSingleStuAwardInfo = function (send,studentId) {
  */
 exports.getAllAwardInfo = function (send) {
     let sql=`SELECT * FROM awardinformation`;
-    let result;
     db.query(sql,[],function (results,fields) {
         try {
-            result={
-                success:true,
-                message:'获取全部获奖信息成功!',
-                data:results
-            }
-        }catch (err) {
+            send(results);
+        }catch(err){
             console.log(err);
-            result={
-                success:false,
-                message:'获取全部获奖信息失败!',
-                data:null
-            }
+            results='error'
+            send(results)
         }
-        send(result);
     })
 }
 /**
@@ -321,15 +268,10 @@ exports.insertActivityInfo = function (send,info) {
     let sql=`INSERT INTO activity(studentId,activityAddr,activityContent,activityTime) VALUES(${info.studentId},${info.activityAddr},${info.activityContent},${info.activityTime})`;
     db.query(sql,[],function (results,fields) {
         try {
-            return true;
+            send(true);
         }catch(err){
-            console.log(true);
-            let result ={
-                success:false,
-                message:'内部出现了一点问题！',
-                data:null
-            }
-            send(result);
+            console.log(err);
+            send(false)
         }
     })
 }
@@ -341,23 +283,14 @@ exports.insertActivityInfo = function (send,info) {
  */
 exports.getSingleStuActivityInfo = function (send,studentId) {
     let sql=`SELECT * FROM activity WHERE studentId=${studentId}`;
-    let result;
     db.query(sql,[],function (results,fields) {
         try {
-            result={
-                success:true,
-                message:'获取党团活动信息成功!',
-                data:results
-            }
-        }catch (err) {
+            send(results);
+        }catch(err){
             console.log(err);
-            result={
-                success:false,
-                message:'获取党团活动信息失败!',
-                data:null
-            }
+            results='error'
+            send(results)
         }
-        send(result);
     })
 }
 /**
@@ -367,23 +300,32 @@ exports.getSingleStuActivityInfo = function (send,studentId) {
  */
 exports.getAllActivityInfo = function (send) {
     let sql=`SELECT * FROM activity`;
-    let result;
     db.query(sql,[],function (results,fields) {
         try {
-            result={
-                success:true,
-                message:'获取全部党团活动信息成功!',
-                data:results
-            }
-        }catch (err) {
+            send(results);
+        }catch(err){
             console.log(err);
-            result={
-                success:false,
-                message:'获取全部党团活动信息失败!',
-                data:null
-            }
+            results='error'
+            send(results)
         }
-        send(result);
     })
 }
 
+/**
+ *author:qxx
+ *description:贫困生申请进度
+ *time:2019/1/22
+ */
+
+exports.getPoorStudentStepById=function (send,studentId) {
+    let sql=`SELECT agree FROM poorstudentapply WHERE studentId=${studentId}`;
+    db.query(sql,[],function (results) {
+        try {
+            send(results[0].agree);
+        }catch (e) {
+            console.log(e);
+            results='error';
+            send(results);
+        }
+    })
+}

@@ -5,12 +5,12 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-// var studentApi = require('./api/studentApi');
-var adminApi = require('./api/adminApi/index');
-var studentApi = require('./api/studentApi/index');
-var classTeacherApi = require('./api/classteacherApi/index');
-var counselorApi = require('./api/counselorApi/index');
-var loginApi = require('./api/login')
+// var student = require('./Services/student');
+var adminApi = require('./Services/admin/admin.Services');
+var studentApi = require('./Services/student/student.Services');
+var classTeacherApi = require('./Services/classteacher/classteacher.Services');
+var counselorApi = require('./Services/counselor/counselor.Services');
+var loginApi = require('./Services/login')
 var app = express();
 
 
