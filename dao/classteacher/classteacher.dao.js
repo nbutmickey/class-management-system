@@ -1,29 +1,40 @@
 let db = require('../../DB/db');
+
+
 /**
  *author:qxx
- *description:获取指定班主任登陆密码
- *time:2018/12/3
+ *description:检验jobId是否重复的持久层操作
+ *time:2019/1/27
  */
-exports.getclassTeacherPassword = function (jobId,send) {
-    let sql = `SELECT pwd FROM classteacher WHERE jobId=${jobId}`;
-    db.query(sql, [], function (results, fields) {
+exports.getCountsByClassTeacherId=function(send,jobId){
+    let sql=`SELECT COUNT(*) AS count FROM classteacher WHERE jobId=${jobId}`;
+    db.query(sql,[],function (results) {
         try {
-            send(results[0].pwd);
-        } catch (err) {
+            if(results[0].count>=1){
+                send(false);
+            }else{
+                send(true);
+            }
+        }catch(err){
             console.log(err);
             send(false);
         }
     })
 }
-
+/**
+ *author:qxx
+ *description:
+ *time:2019/1/27
+ */
 exports.getclassteacherByAccount = function (jobId,send) {
-    let sql = `SELECT jobId,name,role FROM classteacher WHERE jobId=${jobId}`;
+    let sql = `SELECT name FROM classteacher WHERE jobId=${jobId}`;
     db.query(sql, [], function (results, fields) {
         try {
             send(results[0]);
         } catch (err) {
             console.log(err);
-            send(false);
+            results='error'
+            send(results);
         }
     })
 }
@@ -33,7 +44,7 @@ exports.getclassteacherByAccount = function (jobId,send) {
  *time:2018/12/3
  */
 exports.insertclassteacherInfo = function (send,info) {
-    let sql =`INSERT INTO classteacher(jobId,name,pwd,collegeId,classId) VALUES (${info.jobId},'${info.name}','${info.pwd}',${info.collegeId},${info.classId})`;
+    let sql =`INSERT INTO classteacher(jobId,name,collegeId,classId) VALUES (${info.jobId},'${info.name}',${info.collegeId},${info.classId})`;
     db.query(sql,[],function (results,fields) {
         try{
             send(true);
@@ -50,7 +61,7 @@ exports.insertclassteacherInfo = function (send,info) {
  *time:2018/12/3
  */
 exports.updateclasstecacherInfo = function (send,info) {
-    let sql=`UPDATE counselor SET jobId=${info.jobId},name='${info.name}',pwd='${info.pwd}',collegeId=${info.collegeId},classId=${info.classId} WHERE jobId=${info.jobId}`;
+    let sql=`UPDATE counselor SET jobId=${info.jobId},name='${info.name}',collegeId=${info.collegeId},classId=${info.classId} WHERE jobId=${info.jobId}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -102,8 +113,8 @@ exports.getSingleclassteacherInfo = function(send,jobId){
  *description:获取所有班主任信息持久层操作
  *time:2018/12/3
  */
-exports.getAllclassteacherInfo = function(send){
-    let sql = `SELECT classteacher.*,class.* FROM classteacher,class WHERE classteacher.classId=class.classId`;
+exports.getAllclassteacherInfo = function(send,currentPage,pageSize){
+    let sql = `SELECT classteacher.*,class.* FROM classteacher,class LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize} WHERE classteacher.classId=class.classId`;
     db.query(sql,[],function (results,fields) {
             try {
                 send(results);
@@ -121,7 +132,7 @@ exports.getAllclassteacherInfo = function(send){
  *description:查看本班学生基本信息持久层操作
  *time:2018/12/9
  */
-exports.getBasicClassInfo = function (send,jobId) {
+exports.getBasicClassInfo = function (send,jobId,currentPage,pageSize) {
     let sql=`SELECT
             student.studentId,
             student.name,
@@ -132,6 +143,8 @@ exports.getBasicClassInfo = function (send,jobId) {
             student.birthplace
         FROM
             student
+        LIMIT ${pageSize} 
+        OFFSET (${currentPage}-1)*${pageSize}    
         WHERE
             student.classId = (
                 SELECT
@@ -173,11 +186,13 @@ exports.setClassPosition = function (send,position,studentId) {
  *description:查看本班家庭经济困难学生持久层操作
  *time:2018/12/9
  */
-exports.getClassPoor = function (send,jobId) {
+exports.getClassPoor = function (send,jobId,currentPage,pageSize) {
     let sql=`SELECT
                 *
             FROM
                 poorstudentapply
+            LIMIT ${pageSize} 
+            OFFSET (${currentPage}-1)*${pageSize}
             WHERE
                 poorstudentapply.classId = (
                 SELECT
@@ -203,8 +218,8 @@ exports.getClassPoor = function (send,jobId) {
  *time:2018/12/9
  */
 
-exports.getClassAccommodation = function (send,jobId) {
-    let sql=`SELECT student.studentId,student.name,dormitory.*,dormitoryrecord.time,dormitoryrecord.mainContent FROM student,dormitoryrecord,dormitory WHERE student.classId=(SELECT classteacher.classId FROM classteacher WHERE classteacher.jobId=${jobId}) AND student.bedRoomId=dormitory.bedRoomId  AND dormitory.bedRoomId=dormitoryrecord.bedRoomId`;
+exports.getClassAccommodation = function (send,jobId,currentPage,pageSize) {
+    let sql=`SELECT student.studentId,student.name,dormitory.*,dormitoryrecord.time,dormitoryrecord.mainContent FROM student,dormitoryrecord,dormitory LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize} WHERE student.classId=(SELECT classteacher.classId FROM classteacher WHERE classteacher.jobId=${jobId}) AND student.bedRoomId=dormitory.bedRoomId  AND dormitory.bedRoomId=dormitoryrecord.bedRoomId`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results);
@@ -317,7 +332,7 @@ exports.fillEmergenciesRecord = function (send,info) {
  *description:查看本班学生获奖情况持久层操作
  *time:2018/12/10
  */
-exports.getClassAwardInfo = function (send,jobId) {
+exports.getClassAwardInfo = function (send,jobId,currentPage,pageSize) {
     let sql=`SELECT
             student.name,
             awar.studentId,
@@ -327,6 +342,8 @@ exports.getClassAwardInfo = function (send,jobId) {
         FROM
             student,
             awardinformation AS awar
+        LIMIT ${pageSize} 
+        OFFSET (${currentPage}-1)*${pageSize}    
         WHERE
             awar.studentId = student.studentId
         AND awar.classId = (
@@ -352,7 +369,7 @@ exports.getClassAwardInfo = function (send,jobId) {
  *description:查看本班学生违纪情况持久层操作
  *time:2018/12/10
  */
-exports.getClassViolationInfo = function (send,jobId) {
+exports.getClassViolationInfo = function (send,jobId,currentPage,pageSize) {
     let sql=`SELECT
             vio.studentId,
             student.name,
@@ -362,6 +379,8 @@ exports.getClassViolationInfo = function (send,jobId) {
         FROM
             student,
             violation AS vio
+        LIMIT ${pageSize} 
+        OFFSET (${currentPage}-1)*${pageSize}
         WHERE
             vio.studentId = student.studentId
         AND vio.classId = (

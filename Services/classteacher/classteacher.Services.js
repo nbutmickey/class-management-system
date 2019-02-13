@@ -1,4 +1,4 @@
-import {jsonBack} from "../../utils/jsonBack";
+let  jsonBack =require('../../utils/jsonBack') ;
 const express = require('express');
 const router = express.Router();
 let classTeacherDao = require('../../dao/classteacher/classteacher.dao');

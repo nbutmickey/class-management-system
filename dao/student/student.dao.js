@@ -1,30 +1,61 @@
 let db = require('../../DB/db');
-exports.getStudentPassword = function (studentId,send) {
-    let sql=`SELECT pwd FROM student WHERE studentId=${studentId}`;
-    db.query(sql,[],function (results,fields) {
-        try {
-            send(results[0].pwd);
-        }catch(err){
-            console.log(err);
-            send(false);
-        }
-    })
-}
 
 exports.getStudentByAccount = function(studentId,send){
-    let sql=`SELECT studentId,name,role FROM student WHERE studentId=${studentId}`;
+    let sql=`SELECT name FROM student WHERE studentId=${studentId}`;
     db.query(sql,[],function (results) {
         try {
             send(results[0]);
         }catch (err) {
             console.log(err);
+
+            results='error'
             send(results);
         }
     })
 }
 
+exports.getStudentInfoById=function(send,studentId){
+    let sql=`SELECT
+            student.studentId,
+            student.name,
+            student.sex,
+            student.partySituation,
+            college.collegeName,
+            class.className,
+            student.birthplace,
+            student.birthday,
+            student.contact,
+            student.position,
+            student.partySituation,
+            bedroomsituation.buildId,
+            bedroomsituation.bedRoomId,
+            student.other
+        FROM
+            student,
+            class,
+            college,
+            bedroomsituation
+        WHERE
+            student.studentId=${studentId}
+        AND
+          class.classId=student.classId
+        AND 
+          college.collegeId = student.collegeId
+        AND 
+            bedroomsituation.studentId=student.studentId`;
+    db.query(sql,[],function (result) {
+        try {
+            send(result[0])
+;        }catch (err) {
+            console.log(err);
+            result='error';
+            send(result);
+        }
+    })
+}
+
 exports.getCountsByStudentId=function(send,studentId){
-    let sql=`SELECT COUNT(*) AS count FROM student WHERE studentid=${studentId}`;
+    let sql=`SELECT COUNT(*) AS count FROM student WHERE studentId=${studentId}`;
     db.query(sql,[],function (results) {
         try {
             if(results[0].count>=1){
@@ -40,7 +71,7 @@ exports.getCountsByStudentId=function(send,studentId){
 }
 
 exports.insertstudentInfo = function (send,info) {
-    let sql =`INSERT INTO student(studentId,name,pwd,sex,collegeId,classId,birthplace,birthday,partySituation,contact,position,other,role) VALUES (${info.studentId},'${info.name}','${info.pwd}','${info.sex}',${info.collegeId},${info.classId},'${info.birthplace}','${info.birthday}','${info.partySituation}','${info.contact}','${info.position}','${info.other}','${info.role}')`;
+    let sql =`INSERT INTO student(studentId,name,sex,collegeId,classId,birthplace,birthday,partySituation,contact,position,other) VALUES (${info.studentId},'${info.name}','${info.sex}',${info.collegeId},${info.classId},'${info.birthplace}','${info.birthday}','${info.partySituation}','${info.contact}','${info.position}','${info.other}')`;
     db.query(sql,[],function (results,fields) {
         try{
             send(true);
@@ -75,7 +106,7 @@ exports.updatestudentInfo = function (send,info) {
  *time:2018/12/5
  */
 exports.updatestudentAllInfo = function (send,info) {
-    let sql=`UPDATE student SET studentId=${info.studentId},name='${info.name}',pwd='${info.pwd}',sex='${info.sex}',classId=${info.classId},collegeId=${info.classId},bedRoomId=${info.bedRoomId},birthplace='${info.birthplace}',birthday='${info.birthday}',partySituation='${info.partySituation}',contact='${info.contact}',position='${info.position}',other='${info.other}' WHERE studentId=${info.studentId}`;
+    let sql=`UPDATE student stu,bedroomsituation bs SET bs.bedRoomId=${info.bedRoomId},bs.buildId=${info.buildId},stu.birthplace='${info.birthplace}',stu.birthday='${info.birthday}',stu.partySituation='${info.partySituation}',stu.contact='${info.contact}',stu.other='${info.other}' WHERE stu.studentId=bs.studentId AND stu.studentId=${info.studentId}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -112,7 +143,7 @@ exports.getSinglestudentInfo = function(send,studentId){
     let sql = `SELECT * FROM student WHERE studentId=${studentId}`;
     db.query(sql,[],function (results,fields) {
             try {
-                send(results);
+                send(results[0]);
             }catch(err){
                 send(results=='error')
             }
@@ -124,8 +155,8 @@ exports.getSinglestudentInfo = function(send,studentId){
  *description:获取所有学生信息持久层操作
  *time:2018/12/3
  */
-exports.getAllstudentInfo = function(send){
-    let sql = `SELECT * FROM student`;
+exports.getAllstudentInfo = function(send,currentPage,pageSize){
+    let sql = `SELECT * FROM student LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results);
@@ -161,8 +192,8 @@ exports.queryBedRoomChiefCount = function(send,bedRoomId) {
  *description:寝室长申请添加持久层操作
  *time:2018/12/3
  */
-exports.applyForBedRoomChief = function (send,studentId,bedRoomId) {
-    let sql=`INSERT INTO bedroomchiefapply(studentId,agree,bedRoomId) VALUES (${studentId},0,${bedRoomId})`;
+exports.applyForBedRoomChief = function (send,studentId,buildId,bedRoomId) {
+    let sql=`INSERT INTO bedroomchiefapply(studentId,agree,buildId,bedRoomId) VALUES (${studentId},1,${buildId},${bedRoomId})`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -195,8 +226,8 @@ exports.applyForPoor = function (send,info) {
  *description:所有贫困生申请信息展示持久层操作
  *time:2018/12/4
  */
-exports.getAllPoorInfo = function (send) {
-    let sql=`SELECT * FROM poorstudentapply`;
+exports.getAllPoorInfo = function (send,currentPage,pageSize) {
+    let sql=`SELECT * FROM poorstudentapply LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -213,7 +244,7 @@ exports.getAllPoorInfo = function (send) {
  *time:2018/12/4
  */
 exports.insertAwardInfo = function (send,info) {
-    let sql=`INSERT INTO awardinformation(studentId,awardTime,awardName) VALUES(${info.studentId},'${info.awardTime}','${info.awardName}')`;
+    let sql=`INSERT INTO awardinformation(studentId,awardName,awardTime,awardAgency) VALUES(${info.studentId},'${info.awardName}','${info.awardTime}','${info.awardAgency}')`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -246,8 +277,8 @@ exports.getSingleStuAwardInfo = function (send,studentId) {
  *description:所有获奖信息展示持久层操作
  *time:2018/12/4
  */
-exports.getAllAwardInfo = function (send) {
-    let sql=`SELECT * FROM awardinformation`;
+exports.getAllAwardInfo = function (send,currentPage,pageSize) {
+    let sql=`SELECT * FROM awardinformation LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results);
@@ -265,7 +296,7 @@ exports.getAllAwardInfo = function (send) {
  */
 
 exports.insertActivityInfo = function (send,info) {
-    let sql=`INSERT INTO activity(studentId,activityAddr,activityContent,activityTime) VALUES(${info.studentId},${info.activityAddr},${info.activityContent},${info.activityTime})`;
+    let sql=`INSERT INTO activity(studentId,activityTopic,activityAddr,activityContent,activityTime) VALUES(${info.studentId},'${info.activityTopic}','${info.activityAddr}','${info.activityContent}','${info.activityTime}')`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -326,6 +357,30 @@ exports.getPoorStudentStepById=function (send,studentId) {
             console.log(e);
             results='error';
             send(results);
+        }
+    })
+}
+
+/**
+ *author:qxx
+ *description:寝室长申请进度
+ *time:2019/1/31
+ */
+
+exports.getBedRoomApplyChiefStepById=function (send,studentId) {
+    let sql=`SELECT
+            agree
+        FROM
+            bedroomchiefapply
+        WHERE
+            studentId = ${studentId}`;
+    db.query(sql,[],function (result) {
+        try {
+            send(result[0].agree);
+        }catch(err){
+            console.log(err);
+            result='error';
+            send(result);
         }
     })
 }

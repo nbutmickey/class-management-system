@@ -25,8 +25,7 @@ app.use(express.static(path.join(__dirname, 'static')));
 
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    // res.header("Access-Control-Allow-Headers", "X-Token");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,x-token");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,x-token,currentPage,pageSize");
     res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
     next();
 });
@@ -50,7 +49,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.send('error');
 });
 
 module.exports = app;

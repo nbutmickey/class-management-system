@@ -9,7 +9,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 let adminDao = require('../dao/admin/admin.dao');
-let studentDao = require('../dao/student');
+let studentDao = require('../dao/student/student.dao');
 let classteacherDao = require('../dao/classteacher/classteacher.dao');
 let counselorDao = require('../dao/counselor/counselor.dao');
 
@@ -38,30 +38,36 @@ router.post('/getUserInfo',function (req,res) {
                      })
                 }else if(role==='student'){
                     studentDao.getStudentByAccount(account,function (result) {
-                        res.json({
-                            success:true,
-                            username:result.name,
-                            roles:loginType,
-                            account:result.studentId
-                        })
+                        if(result!=='error'){
+                            res.json({
+                                success:true,
+                                username:result.name,
+                                roles:loginType,
+                                account:account
+                            })
+                        }
                     })
                 }else if(role==='counselor'){
                      counselorDao.getcounselorByAccount(account,function (result) {
-                         res.json({
-                             success:true,
-                             username:result.name,
-                             roles:loginType,
-                             account:result.jobId
-                         })
+                         if(result!=='error'){
+                             res.json({
+                                 success:true,
+                                 username:result.name,
+                                 roles:loginType,
+                                 account:account
+                             })
+                         }
                      })
                 }else{
                        classteacherDao.getclassteacherByAccount(account,function (result) {
-                           res.json({
-                               success:true,
-                               username:result.name,
-                               roles:loginType,
-                               account:result.jobId
-                           })
+                           if(result!=='error'){
+                               res.json({
+                                   success:true,
+                                   username:result.name,
+                                   roles:loginType,
+                                   account:account
+                               })
+                           }
                        })
                 }
             }
@@ -78,7 +84,7 @@ router.post('/getUserInfo',function (req,res) {
 router.post('/login',function (req,res) {
     let {username,password,role}=req.body.loginInfo;
     if(role==='admin'){
-        adminDao.getAdminPassword(username,function (result) {
+        adminDao.getPassword(username,function (result) {
             if(result==password){
                 const userToken = {
                     name:username,
@@ -103,7 +109,7 @@ router.post('/login',function (req,res) {
             }
         })
     }else if(role==='student') {
-        studentDao.getStudentPassword(username,function (result) {
+        adminDao.getPassword(username,function (result) {
             if(bcrypt.compareSync(password,result)){
                 const userToken = {
                     name:username,
@@ -128,7 +134,7 @@ router.post('/login',function (req,res) {
             }
         })
     }else if(role==='counselor'){
-            counselorDao.getcounselorPassword(username,function (result) {
+            adminDao.getPassword(username,function (result) {
                 if(bcrypt.compareSync(password,result)){
                     const userToken = {
                         name:username,
@@ -153,7 +159,7 @@ router.post('/login',function (req,res) {
                 }
             })
     }else if(role==='classteacher'){
-            classteacherDao.getclassTeacherPassword(username,function (result) {
+            adminDao.getPassword(username,function (result) {
                 if(bcrypt.compareSync(password,result)){
                     const userToken = {
                         name:username,

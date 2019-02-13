@@ -8,5 +8,6 @@ module.exports = {
     user:'root',
     password:'qwe',
     database:'class-management',
-    port:'3306'
+    port:'3306',
+    multipleStatements: true
 }

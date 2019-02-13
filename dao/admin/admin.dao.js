@@ -1,7 +1,19 @@
 let db = require('../../DB/db');
 
-exports.getAdminPassword = function (username,send) {
-    let sql=`SELECT pwd FROM permission WHERE user=${username}`;
+exports.insertPermission=function(send,user,pwd,role){
+    let sql=`INSERT INTO permission(user,pwd,role) VALUES(${user},'${pwd}','${role}')`;
+    db.query(sql,[],function (result) {
+        try{
+            send(true);
+        }catch (e) {
+            console.log(e);
+            send(false);
+        }
+    })
+}
+
+exports.getPassword = function (user,send) {
+    let sql=`SELECT pwd FROM permission WHERE user=${user}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results[0].pwd);
@@ -13,7 +25,7 @@ exports.getAdminPassword = function (username,send) {
 }
 
 exports.approvedBedRoomChief = function (send,studentId) {
-    let sql=`UPDATE bedroomchiefapply SET agree = 1 WHERE studentId=${studentId}`;
+    let sql=`UPDATE bedroomchiefapply SET agree = 2 WHERE studentId=${studentId};UPDATE bedroomsituation SET bedRoomChief=1 WHERE studentId=${studentId}; `;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -26,7 +38,7 @@ exports.approvedBedRoomChief = function (send,studentId) {
 
 
 exports.notApprovedBedRoomChief = function(send,studentId){
-    let sql=`UPDATE bedroomchiefapply SET agree = -1 WHERE studentId=${studentId}`;
+    let sql=`UPDATE bedroomchiefapply SET agree = 3 WHERE studentId=${studentId};`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -38,7 +50,19 @@ exports.notApprovedBedRoomChief = function(send,studentId){
 }
 
 exports.getAllApplyForBedRoomChief = function(send){
-    let sql=`SELECT * FROM bedroomchiefapply WHERE agree=0`;
+    let sql=`SELECT
+            bedroomchiefapply.studentId,
+            student.name,
+            bedroomchiefapply.buildId,
+            bedroomchiefapply.bedRoomId,
+            bedroomchiefapply.applydate
+        FROM
+            bedroomchiefapply,
+            student
+        WHERE
+            agree = 1
+        AND student.studentId = bedroomchiefapply.studentId
+        ORDER BY buildId`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results);
@@ -57,15 +81,15 @@ exports.getAllCollege = function (send) {
             send(results);
         }catch(err){
             console.log(err);
-            results='error'
-            send(results);
+            // results='error'
+            // send(results);
         }
     })
 }
 
 
-exports.getAllClassById = function (send,collegeId) {
-    let sql=`SELECT classId,className FROM class WHERE collegeId=${collegeId}`;
+exports.getAllClassById = function (send,collegeId,currentPage,pageSize) {
+    let sql=`SELECT classId,className FROM class LIMIT ${pageSize} OFFSET ${(currentPage-1)*pageSize} WHERE collegeId=${collegeId}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results);
@@ -77,11 +101,15 @@ exports.getAllClassById = function (send,collegeId) {
     })
 }
 
-exports.getAllBuildInfo=function (send) {
-    let sql='SELECT build,bedRoomId,addr,hygieneSituation FROM dormitory ORDER BY build';
+exports.getAllBuildInfo=function (send,currentPage,pageSize) {
+    let sql=`SELECT COUNT(*) FROM dormitory;
+            SELECT build,bedRoomId,addr,hygieneSituation FROM dormitory LIMIT ${pageSize} OFFSET ${(currentPage-1)*pageSize};`;
     db.query(sql,[],function (results) {
         try {
-            send(results);
+            var result={};
+            result.total= results[0][0]['COUNT(*)'];
+            result.data=results[1];
+            send(result);
         }catch(err){
             console.log(err);
             results='error'
