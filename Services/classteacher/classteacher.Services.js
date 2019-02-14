@@ -1,18 +1,21 @@
 let  jsonBack =require('../../utils/jsonBack') ;
 const express = require('express');
 const router = express.Router();
+let  jsonUtils =require('../../utils/jsonBack') ;
 let classTeacherDao = require('../../dao/classteacher/classteacher.dao');
 /**
  *author:qxx
  *description:根据jobId查看本班学生基本信息
  *time:2018/12/9
  */
-router.get('/allBasicList',function (req,res) {
-    let jobId=req.query.jobId;
+router.get('/allBasicList/:jobId',function (req,res) {
+    let jobId=req.params.jobId;
     classTeacherDao.getBasicClassInfo(function (result) {
-        if(result!=='error')
-            jsonBack(res,true,result,'本班学生信息拉取成功！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result!=='error'){
+            jsonUtils.jsonBack(res,true,result,'本班学生信息拉取成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },jobId);
 });
 
@@ -24,9 +27,11 @@ router.get('/allBasicList',function (req,res) {
 router.post('/setClassPosition',function (req,res) {
     let {position,studentId}=req.body.classPosition;
     classTeacherDao.setClassPosition(function (result) {
-        if(result)
-            jsonBack(res,true,null,'班委信息设置成功！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'班委信息设置成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },position,studentId);
 });
 
@@ -35,12 +40,14 @@ router.post('/setClassPosition',function (req,res) {
  *description:查看本班家庭经济困难学生
  *time:2018/12/9
  */
-router.get('/classPoorList',function (req,res) {
-   let jobId=req.query.jobId;
+router.get('/classPoorList/:jobId',function (req,res) {
+   let jobId=req.params.jobId;
    classTeacherDao.getClassPoor(function (result) {
-       if(result!=='error')
-           jsonBack(res,true,result,'查看本班经济困难学生信息！');
-           jsonBack(res,false,null,'内部出现了一点问题！');
+       if(result!=='error'){
+           jsonUtils.jsonBack(res,true,result,'查看本班经济困难学生信息！');
+       }else{
+           jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+       }
    },jobId)
 })
 
@@ -49,12 +56,14 @@ router.get('/classPoorList',function (req,res) {
  *description:根据jobId查看本班学生住宿情况
  *time:2018/12/9
  */
-router.get('/classDormitoryList',function (req,res) {
+router.get('/classDormitoryList/:jobId',function (req,res) {
     let jobId=req.params.jobId;
     classTeacherDao.getClassAccommodation(function (result) {
-        if(result!=='error')
-            jsonBack(res,true,result,'本班学生住宿情况拉取成功！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result!=='error'){
+            jsonUtils.jsonBack(res,true,result,'本班学生住宿情况拉取成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },jobId);
 })
 
@@ -67,9 +76,11 @@ router.get('/classDormitoryList',function (req,res) {
 router.post('/fillClassTeacherScheme',function (req,res) {
     let schemeInfo=req.body.schemeInfo;
     classTeacherDao.fillWorkPlan(function (result) {
-        if(result)
-            jsonBack(res,true,null,'班主任本学期工作计划填写成功！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'班主任本学期工作计划填写成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },schemeInfo);
 })
 /**
@@ -78,12 +89,14 @@ router.post('/fillClassTeacherScheme',function (req,res) {
  *time:2018/12/10
  */
 router.post('/fillClassMeetingRecord',function (req,res) {
-    let meeetingInfo=req.body.meeetingInfo
+    let meetingInfo=req.body.meetingInfo
     classTeacherDao.fillMeetingRecord(function (result) {
-        if(result)
-            jsonBack(res,true,null,'班会记录填写成功！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
-    },meeetingInfo)
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'班会记录填写成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
+    },meetingInfo)
 })
 
 /**
@@ -94,9 +107,11 @@ router.post('/fillClassMeetingRecord',function (req,res) {
 router.post('/fillClassDormitoryRecord',function (req,res) {
     let {jobId,time,semester,week,dormitoryNames,mainContent}=req.body.dormitoryRecord;
     classTeacherDao.fillDormitoryRecord(function (result) {
-        if(result)
-                jsonBack(res,true,null,'寝室记录表已填写成功！');
-                jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'寝室记录表已填写成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
         },jobId,time,semester,week,dormitoryNames,mainContent);
 });
 
@@ -108,9 +123,11 @@ router.post('/fillClassDormitoryRecord',function (req,res) {
 router.post('/fillBedroomHygiene',function (req,res) {
     let bedRoomHygiene=req.body.bedRoomHygiene;
      classTeacherDao.fillBedRoomHygieneInfo(function (result) {
-         if(result)
-             jsonBack(res,true,null,'寝室卫生表已填写成功！');
-             jsonBack(res,false,null,'内部出现了一点问题！');
+         if(result){
+             jsonUtils.jsonBack(res,true,null,'寝室卫生表已填写成功！');
+         }else{
+             jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+         }
      },bedRoomHygiene)
 })
 
@@ -127,18 +144,22 @@ router.post('/fillStudentTalkRecord',function (req,res) {
         {
          for(let i=0;i<types.length;i++){
             classTeacherDao.insertStudentTalkContact(function () {
-                if(result)
+                if(result){
                     flag=true;
+                }else{
                     flag=false;
+                }
             },types[i]);
          }
         }else{
             flag=false;
         }
     },jobId,studentName,talkTime,times,mainProblem,kpOfCounseling);
-    if(flag)
-        jsonBack(res,true,null,'学生谈话记录表已填写成功！');
-        jsonBack(res,false,null,'内部出现了一点问题！');
+    if(flag){
+        jsonUtils.jsonBack(res,true,null,'学生谈话记录表已填写成功！');
+    }else{
+        jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+    }
 })
 
 
@@ -150,9 +171,11 @@ router.post('/fillStudentTalkRecord',function (req,res) {
 router.post('/fillEmergencyInfo',function (req,res) {
     let emergencyInfo=req.body.emergencyInfo;
     classTeacherDao.fillEmergenciesRecord(function (result) {
-        if(result)
-            jsonBack(res,true,null,'突发事件记录成功！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'突发事件记录成功！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },emergencyInfo)
 })
 
@@ -161,12 +184,14 @@ router.post('/fillEmergencyInfo',function (req,res) {
  *description:查看本班学生获奖情况
  *time:2018/12/10
  */
-router.get('/classAwardList',function (req,res) {
-    let jobId=req.query.jobId;
+router.get('/classAwardList/:jobId',function (req,res) {
+    let jobId=req.params.jobId;
     classTeacherDao.getClassAwardInfo(function (result) {
-        if(result)
-            jsonBack(res,true,null,'学生获奖列表已返回！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'学生获奖列表已返回！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },jobId);
 })
 /**
@@ -174,12 +199,14 @@ router.get('/classAwardList',function (req,res) {
  *description:查看本班学生违纪情况
  *time:2018/12/10
  */
-router.get('/classViolationList',function (req,res) {
-    let jobId=req.query.jobId;
+router.get('/classViolationList/:jobId',function (req,res) {
+    let jobId=req.params.jobId;
     classTeacherDao.getClassViolationInfo(function (result) {
-        if(result)
-            jsonBack(res,true,null,'本班学生违纪列表已返回！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'本班学生违纪列表已返回！');
+        }else {
+            jsonUtils.jsonBack(res, false, null, '内部出现了一点问题！');
+        }
     },jobId);
 })
 
@@ -192,9 +219,11 @@ router.get('/classViolationList',function (req,res) {
 router.post('/fillClassActivity',function (req,res) {
     let classActivity=req.body.classActivity;
     classTeacherDao.fillClassActivityInfo(function (result) {
-        if(result)
-            jsonBack(res,true,null,'班级活动记录已成功插入！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result){
+            jsonUtils.jsonBack(res,true,null,'班级活动记录已成功插入！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     },classActivity)
 })
 
@@ -206,9 +235,11 @@ router.post('/fillClassActivity',function (req,res) {
  */
 router.get('/problemTypeList',function (req,res) {
     classTeacherDao.getAllTalkTypes(function (result) {
-        if(result!=='error')
-            jsonBack(res,true,null,'问题归类列表已返回！');
-            jsonBack(res,false,null,'内部出现了一点问题！');
+        if(result!=='error'){
+            jsonUtils.jsonBack(res,true,null,'问题归类列表已返回！');
+        }else{
+            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+        }
     });
 })
 
