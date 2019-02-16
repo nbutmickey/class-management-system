@@ -1,5 +1,111 @@
 let db = require('../../DB/db');
 
+
+
+let getClassInfo=function(jobId){
+    let sql=`SELECT
+            counselorclasscontact.classId,
+            class.className
+        FROM
+            counselorclasscontact,
+            class
+        WHERE	
+            class.classId=counselorclasscontact.classId
+        AND
+            counselorclasscontact.jobId = ?`;
+    return new Promise(function(resolve,reject){
+        db.query(sql,[jobId],function (results,field) {
+            try {
+                resolve(results)
+            }catch (err) {
+                reject(err)
+            }
+        })
+    })
+}
+let getStuInfo=function(classId){
+    let sql=`SELECT
+            DISTINCT awardinformation.studentId,
+            student.name
+        FROM
+            student,
+            awardinformation
+        WHERE	
+            awardinformation.classId=?
+        AND 
+          awardinformation.studentId=student.studentId`;
+    return new Promise(function(resolve,reject){
+        db.query(sql,[classId],function (results,field) {
+            try {
+                resolve(results)
+            }catch (err) {
+                reject(err)
+            }
+        })
+    })
+}
+let getVioStuInfo=function(classId){
+    let sql=`SELECT
+            DISTINCT violation.studentId,
+            student.name
+        FROM
+            student,
+            violation
+        WHERE	
+            violation.classId=?
+        AND 
+          violation.studentId=student.studentId`;
+    return new Promise(function(resolve,reject){
+        db.query(sql,[classId],function (results,field) {
+            try {
+                resolve(results)
+            }catch (err) {
+                reject(err)
+            }
+        })
+    })
+}
+
+let getStuAwardInfo=function(studentId){
+    let sql=`SELECT
+            awardinformation.awardName,
+            awardinformation.awardTime,
+            awardinformation.awardAgency
+        FROM
+            awardinformation
+        WHERE	
+            awardinformation.studentId=?`;
+    return  new Promise(function (resolve,reject) {
+        db.query(sql,[studentId],function (results,field) {
+            try {
+                resolve(results)
+            }catch (err) {
+                reject(err)
+            }
+        })
+    })
+}
+
+
+let getStuViolationInfo=function(studentId){
+    let sql=`SELECT
+            violation.violationDegree,
+            violation.violationContent,
+            violation.violationTime
+        FROM
+            violation
+        WHERE
+            studentId = ${studentId}`;
+    return  new Promise(function (resolve,reject) {
+        db.query(sql,[studentId],function (results,field) {
+            try {
+                resolve(results)
+            }catch (err) {
+                reject(err)
+            }
+        })
+    })
+}
 /**
  *author:qxx
  *description:
@@ -350,45 +456,103 @@ exports.getApplyPoorByCounselor=function(send,jobId){
  *time:2018/12/7
  */
 exports.getClassCommitteeByCounselor = function (send,jobId) {
-    let sql=`SELECT
-                *
-            FROM
-                (
-                    SELECT
-                        college.collegeName,
-                        class.className,
-                        student.studentId,
-                        student.name,
-                        student.sex,
-                        student.classId,
-                        student.collegeId,
-                        student.position
+    let classListSql=`SELECT
+                        counselorclasscontact.classId,
+                        class.className
                     FROM
-                        student,
-                        college,
+                        counselorclasscontact,
                         class
-                    WHERE
-                        student.collegeId = college.collegeId
-                    AND student.classId = class.classId
-                    AND student.position != '无'
-                    AND student.position != ''
-                    AND student.position != 'undefined'
-                ) AS stu 
-            WHERE
-                stu.classId IN (
-                    SELECT
-                        counselorclasscontact.classId
-                    FROM
-                        counselorclasscontact
-                    WHERE
-                        jobId = ${jobId}
-                ) `;
-    db.query(sql,[],function (results,fields) {
+                    WHERE	
+                        class.classId=counselorclasscontact.classId
+                    AND
+                        counselorclasscontact.jobId = 2007010901`;
+    let committeeInfoSql=`
+                        SELECT
+                                    *
+                                FROM
+                                    (
+                                        SELECT
+                                            college.collegeName,
+                                            class.className,
+                                            student.name,       
+                                            student.classId,
+                                            student.collegeId,
+                                            student.position
+                                        FROM
+                                            student,
+                                            college,
+                                            class
+                                        WHERE
+                                            student.collegeId = college.collegeId
+                                        AND student.classId = class.classId
+                                        AND student.position != '无'
+                                        AND student.position != ''
+                                        AND student.position != 'undefined'
+                                    ) AS stu 
+                                WHERE
+                                    stu.classId =?`;
+    db.query(classListSql,[],function (classResults,fields) {
+        let classCommitteeInfo=[];
+        let row={
+            collegeName:'',
+            classId:'',
+            className:'',
+            monitor:'',
+            communistParty:'',
+            associateMonitor:'',
+            study:'',
+            life:'',
+            discipline:'',
+            propaganda:'',
+            sport:'',
+            organize:'',
+            security:''
+        }
         try {
-            send(results);
+            for(let i=0;i<classResults.length;i++){
+                row.className=classResults[i].className;
+                //console.log(classResults[i]);
+                db.query(committeeInfoSql,[classResults[i].classId],function (committeeResult) {
+                    if(committeeResult.length!==0) {
+                        row.collegeName = committeeResult[0].collegeName;
+                        for (let i = 0; i < committeeResult.length; i++) {
+                            let position = committeeResult[i].position;
+                            let stuName = committeeResult[i].name;
+                            if (position === '班长') {
+                                row.monitor = stuName;
+                            } else if (position === '副班长') {
+                                row.associateMonitor = stuName;
+                            } else if (position === '团支书') {
+                                row.communistParty = stuName;
+                            } else if (position === '学习委员') {
+                                row.study = stuName;
+                            } else if (position === '生活委员') {
+                                row.life = stuName;
+                            } else if (position === '纪律委员') {
+                                row.discipline = stuName;
+                            } else if (position === '宣传委员') {
+                                row.propaganda = stuName;
+                            } else if (position === '组织委员') {
+                                row.organize = stuName;
+                            } else if (position === '体育委员') {
+                                row.sport = stuName;
+                            } else if (position === '治保委员') {
+                                row.security = stuName;
+                            }
+                        }
+                        classCommitteeInfo.push(row);
+                    }
+                })
+                //console.log(classCommitteeInfo);
+            }
+            console.log(classCommitteeInfo);
+            setTimeout(()=>{
+                //console.log(classCommitteeInfo);
+                send(classCommitteeInfo);
+            },1000)
         }catch(err){
             console.log(err);
-            results='error'
+            let results='error'
             send(results)
         }
     })
@@ -400,104 +564,45 @@ exports.getClassCommitteeByCounselor = function (send,jobId) {
  *time:2018/12/7
  */
 exports.getViolationByCounselor = function (send,jobId) {
-    let sql=`SELECT
-            vio.studentId,
-            student.name,
-            vio.violationDegree,
-            vio.violationContent,
-            vio.violationTime
-        FROM
-            student,
-            (
-                SELECT
-                    *
-                FROM
-                    violation
-                WHERE
-                    classId IN (
-                        SELECT
-                            counselorclasscontact.classId
-                        FROM
-                            counselorclasscontact
-                        WHERE
-                            counselorclasscontact.jobId = ${jobId}
-                    )
-            ) AS vio
-        
-        WHERE
-            vio.studentId = student.studentId`;
-    db.query(sql,[],function (results,fields) {
-        try {
-            send(results);
-        }catch(err){
-            console.log(err);
-            results='error'
-            send(results)
+    let vioInfoList=[];
+    getClassInfo(jobId).then((classResult)=>{
+        for(let i=0;i<classResult.length;i++){
+            let vioInfoByClass={
+                className:'',
+                classId:'',
+                stuInfo:[]
+            }
+            vioInfoByClass.classId=classResult[i].classId;
+            vioInfoByClass.className=classResult[i].className;
+            vioInfoList.push(vioInfoByClass);
         }
-    })
-}
 
-
-let getClassInfo=function(jobId){
-    let sql=`SELECT
-            counselorclasscontact.classId,
-            class.className
-        FROM
-            counselorclasscontact,
-            class
-        WHERE	
-            class.classId=counselorclasscontact.classId
-        AND
-            counselorclasscontact.jobId = ?`;
-    return new Promise(function(resolve,reject){
-        db.query(sql,[jobId],function (results,field) {
-            try {
-                resolve(results)
-            }catch (err) {
-                reject(err)
-            }
-        })
-    })
-}
-let getStuInfo=function(classId){
-    let sql=`SELECT
-            DISTINCT awardinformation.studentId,
-            student.name
-        FROM
-            student,
-            awardinformation
-        WHERE	
-            awardinformation.classId=?
-        AND 
-          awardinformation.studentId=student.studentId`;
-    return new Promise(function(resolve,reject){
-        db.query(sql,[classId],function (results,field) {
-            try {
-                resolve(results)
-            }catch (err) {
-                reject(err)
-            }
-        })
-    })
-}
-let getStuAwardInfo=function(studentId){
-    let sql=`SELECT
-            awardinformation.awardName,
-            awardinformation.awardTime,
-            awardinformation.awardAgency
-        FROM
-            awardinformation
-        WHERE	
-            awardinformation.studentId=?`;
-    return  new Promise(function (resolve,reject) {
-            db.query(sql,[studentId],function (results,field) {
-                try {
-                    resolve(results)
-                }catch (err) {
-                    reject(err)
+        //console.log(awardInfoList);
+        for(let j=0;j<vioInfoList.length;j++){
+            getVioStuInfo(vioInfoList[j].classId).then((stuResult)=>{
+                //console.log(stuResult);
+                for(let i=0;i<stuResult.length;i++){
+                    vioInfoList[j].stuInfo.push({stuName:stuResult[i].name,stuId:stuResult[i].studentId,Info:[]})
                 }
+                for(let k=0;k<vioInfoList[j].stuInfo.length;k++){
+                    getStuViolationInfo(vioInfoList[j].stuInfo[k].stuId).then((awardInfo)=>{
+                        for(let i=0;i<awardInfo.length;i++){
+                            vioInfoList[j].stuInfo[k].Info.push(awardInfo[i]);
+                        }
+                        //console.log(awardInfoList);
+                        //allAwardInfo=awardInfoList
+                    })
+                }
+
             })
-        })
+        }
+        setTimeout(()=>{
+            //console.log(awardInfoList)
+            send(vioInfoList)
+        },1000);
+    },(err)=>{
+
+    })
 }
 
 /**
@@ -506,53 +611,44 @@ let getStuAwardInfo=function(studentId){
  *time:2018/12/7
  */
 exports.getAwardByCounselor = function (send,jobId) {
+    //var allAwardInfo=[];
     let awardInfoList=[];
-    //let classResult=await getClassInfo(jobId);
-    getClassInfo(jobId).then(function (classResult) {
+    getClassInfo(jobId).then((classResult)=>{
         for(let i=0;i<classResult.length;i++){
-            getStuInfo(classResult[i].classId).then(function (stuResult) {
-                let awardInfoByClass={
-                    className:'',
-                    stuInfo:[]
-                };
-                awardInfoByClass.className=classResult[i].className;
-                if(stuResult.length!==0) {
-                    for (let i = 0; i < stuResult.length; i++) {
-                        let singleStuInfo = {
-                            stuName: '',
-                            awardInfo: []
-                        }
-                        singleStuInfo['stuName'] = stuResult[i].name;
-                        getStuAwardInfo(stuResult[i].studentId).then(function (singleAwardInfo) {
-                            for (let i = 0; i < singleAwardInfo.length; i++)
-                                singleStuInfo['awardInfo'].push(singleAwardInfo[i]);
-                            awardInfoByClass['stuInfo'].push(singleStuInfo);
-                            //console.log(awardInfoByClass);
-                            //send(awardInfoByClass);
-
-                        }, function (error) {
-                            console.log(error);
-                            let results = 'error'
-                            send(results)
-                        })
-                        //console.log(awardInfoByClass);
-                    }
-
-                }
-                //console.log(awardInfoByClassz);
-                awardInfoList.push(awardInfoByClass);
-            },function (error) {
-                console.log(error);
-                let results='error'
-                send(results)
-            })
-
+            let awardInfoByClass={
+                className:'',
+                classId:'',
+                stuInfo:[]
+            }
+            awardInfoByClass.classId=classResult[i].classId;
+            awardInfoByClass.className=classResult[i].className;
+            awardInfoList.push(awardInfoByClass);
         }
-        console.log(awardInfoList);
-        send(awardInfoList);
-    },function (error) {
-        console.log(error);
-        let results='error'
-        send(results)
+
+        //console.log(awardInfoList);
+        for(let j=0;j<awardInfoList.length;j++){
+            getStuInfo(awardInfoList[j].classId).then((stuResult)=>{
+                for(let i=0;i<stuResult.length;i++){
+                    awardInfoList[j].stuInfo.push({stuName:stuResult[i].name,stuId:stuResult[i].studentId,Info:[]})
+                }
+                for(let k=0;k<awardInfoList[j].stuInfo.length;k++){
+                    getStuAwardInfo(awardInfoList[j].stuInfo[k].stuId).then((awardInfo)=>{
+                        for(let i=0;i<awardInfo.length;i++){
+                            awardInfoList[j].stuInfo[k].Info.push(awardInfo[i]);
+                        }
+                        //console.log(awardInfoList);
+                        //allAwardInfo=awardInfoList
+                    })
+                }
+
+            })
+        }
+        setTimeout(()=>{
+            //console.log(awardInfoList)
+            send(awardInfoList)
+        },1000);
+    },(err)=>{
+
     })
+    //console.log(awardInfoList);
 }

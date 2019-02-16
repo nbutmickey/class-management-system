@@ -132,7 +132,7 @@ exports.getAllclassteacherInfo = function(send,currentPage,pageSize){
  *description:查看本班学生基本信息持久层操作
  *time:2018/12/9
  */
-exports.getBasicClassInfo = function (send,jobId,currentPage,pageSize) {
+exports.getBasicClassInfo = function (send,jobId) {
     let sql=`SELECT
             student.studentId,
             student.name,
@@ -142,9 +142,7 @@ exports.getBasicClassInfo = function (send,jobId,currentPage,pageSize) {
             student.position,
             student.birthplace
         FROM
-            student
-        LIMIT ${pageSize} 
-        OFFSET (${currentPage}-1)*${pageSize}    
+            student  
         WHERE
             student.classId = (
                 SELECT
@@ -158,6 +156,7 @@ exports.getBasicClassInfo = function (send,jobId,currentPage,pageSize) {
         try {
             send(results);
         }catch(err){
+            console.log(err);
             results='error'
             send(results);
         }
@@ -186,13 +185,11 @@ exports.setClassPosition = function (send,position,studentId) {
  *description:查看本班家庭经济困难学生持久层操作
  *time:2018/12/9
  */
-exports.getClassPoor = function (send,jobId,currentPage,pageSize) {
+exports.getClassPoor = function (send,jobId) {
     let sql=`SELECT
                 *
             FROM
                 poorstudentapply
-            LIMIT ${pageSize} 
-            OFFSET (${currentPage}-1)*${pageSize}
             WHERE
                 poorstudentapply.classId = (
                 SELECT
@@ -201,6 +198,8 @@ exports.getClassPoor = function (send,jobId,currentPage,pageSize) {
                     classteacher
                 WHERE
                     classteacher.jobId = ${jobId}
+                AND 
+                    poorstudentapply.agree=3    
             )`;
     db.query(sql,[],function (results,fields) {
         try {
@@ -218,8 +217,24 @@ exports.getClassPoor = function (send,jobId,currentPage,pageSize) {
  *time:2018/12/9
  */
 
-exports.getClassAccommodation = function (send,jobId,currentPage,pageSize) {
-    let sql=`SELECT student.studentId,student.name,dormitory.*,dormitoryrecord.time,dormitoryrecord.mainContent FROM student,dormitoryrecord,dormitory LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize} WHERE student.classId=(SELECT classteacher.classId FROM classteacher WHERE classteacher.jobId=${jobId}) AND student.bedRoomId=dormitory.bedRoomId  AND dormitory.bedRoomId=dormitoryrecord.bedRoomId`;
+exports.getClassAccommodation = function (send,jobId) {
+    let sql=`SELECT
+            student. name,
+            bedroomsituation.*
+        FROM
+            student,
+            bedroomsituation
+        WHERE
+            student.classId = (
+                SELECT
+                    classteacher.classId
+                FROM
+                    classteacher
+                WHERE
+                    classteacher.jobId = ${jobId}
+            )
+        AND student.studentId=bedroomsituation.studentId`;
+
     db.query(sql,[],function (results,fields) {
         try {
             send(results);
@@ -237,7 +252,13 @@ exports.getClassAccommodation = function (send,jobId,currentPage,pageSize) {
  *time:2018/12/10
  */
 exports.fillWorkPlan = function (send,info) {
-    let sql=`INSERT INTO classteacherscheme(jobId,semester,content) VALUES(${info.jobId},'${info.semester}','${info.content}')`;
+    let sql=`INSERT INTO classteacherscheme (jobId, semester, content)
+            VALUES
+	            (
+		            $ { info.jobId }, 
+		            '${info.semester}',
+		            '${info.content}'
+	        )`
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
@@ -253,7 +274,23 @@ exports.fillWorkPlan = function (send,info) {
  *time:2018/12/10
  */
 exports.fillMeetingRecord = function (send,info) {
-    let sql=`INSERT INTO classmeetingrecord(jobId,time,addr,participateNumber,theme,mainContent) VALUES(${info.jobId},'${info.time}','${info.addr}','${info.participateNumber}','${info.theme}','${info.mainContent}')`;
+    let sql=`INSERT INTO classmeetingrecord (
+                jobId,
+                time,
+                addr,
+                participateNumber,
+                theme,
+                mainContent
+            )
+            VALUES
+                (
+                    $ { info.jobId }, 
+                    '${info.time}',
+                    '${info.addr}',
+                    '${info.participateNumber}',
+                    '${info.theme}',
+                    '${info.mainContent}'
+                )`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true);
