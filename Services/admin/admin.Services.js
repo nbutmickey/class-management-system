@@ -538,12 +538,14 @@ router.post('/deleteSingleCounselorInfo/:jobId',function (req,res) {
         }
     },jobId)
 })
+
+
 /**
  *author:qxx
  *description:删除单个学生信息
  *time:2019/1/22
  */
-router.post('/deleteSingleStudentInfo/studentId',function (req,res) {
+router.post('/deleteSingleStudentInfo/:studentId',function (req,res) {
     let studentId = req.params.studentId;
     studentDao.deletestudentInfo(function (result) {
         if(result){

@@ -21,6 +21,7 @@ exports.getStudentInfoById=function(send,studentId){
             student.sex,
             student.partySituation,
             college.collegeName,
+            class.classId,
             class.className,
             student.birthplace,
             student.birthday,
@@ -195,6 +196,18 @@ exports.queryBedRoomChiefCount = function(send,bedRoomId) {
 exports.applyForBedRoomChief = function (send,studentId,buildId,bedRoomId) {
     let sql=`INSERT INTO bedroomchiefapply(studentId,agree,buildId,bedRoomId) VALUES (${studentId},1,${buildId},${bedRoomId})`;
     db.query(sql,[],function (results,fields) {
+        try {
+            send(true);
+        }catch(err){
+            console.log(err);
+            send(false);
+        }
+    })
+}
+
+exports.updateApplyBedRoomChief=function(send,studentId){
+    let sql =`UPDATE bedroomchiefapply SET agree=1 WHERE studentId=${studentId}`;
+    db.query(sql,[],function (result) {
         try {
             send(true);
         }catch(err){

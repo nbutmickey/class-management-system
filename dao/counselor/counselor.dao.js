@@ -330,27 +330,6 @@ exports.getClassAllStuInfo = function (send,jobId,currentPage,pageSize) {
     })
 }
 
-exports.getStudentDetailById=function(send,studentId){
-    let sql=``
-}
-
-/**
- *author:qxx
- *description:审批不通过贫困生申请的持久层操作
- *time:2018/12/7
- */
-exports.changeNotAgreePoorByCounselor = function (send,studentId) {
-    let sql=`UPDATE poorstudentapply SET agree = -1 WHERE studentId=${studentId}`;
-    db.query(sql,[],function (results,fields) {
-        try {
-            send(true);
-        }catch (err) {
-            console.log(err);
-            send(false);
-        }
-    })
-}
-
 /**
  *author:qxx
  *description:审批通过贫困生申请的持久层操作
