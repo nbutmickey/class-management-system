@@ -8,15 +8,14 @@ let classTeacherDao = require("../../dao/classteacher/classteacher.dao");
  *description:根据jobId查看本班学生基本信息
  *time:2018/12/9
  */
-router.get("/allBasicList/:jobId", function(req, res) {
+router.get("/allBasicList/:jobId",async(req, res)=> {
   let jobId = req.params.jobId;
-  classTeacherDao.getBasicClassInfo(function(result) {
-    if (result !== "error") {
-      jsonUtils.jsonBack(res, true, result, "本班学生信息拉取成功！");
-    } else {
-      jsonUtils.jsonBack(res, false, null, "内部出现了一点问题！");
-    }
-  }, jobId);
+  try {
+      let result=await classTeacherDao.getBasicClassInfo(jobId);
+      jsonUtils.jsonBack(res, true, result, "本班学生信息拉取成功！")
+  }catch (e) {
+      jsonUtils.jsonBack(res, false, null,'参数错误');
+  }
 });
 
 /**
@@ -121,14 +120,25 @@ router.get("/classDormitoryList/:jobId", function(req, res) {
  */
 router.post("/fillClassTeacherScheme", function(req, res) {
   let schemeInfo = req.body.schemeInfo;
-  console.log(schemeInfo);
-  classTeacherDao.fillWorkPlan(function(result) {
-    if (result) {
-      jsonUtils.jsonBack(res, true, null, "班主任本学期工作计划填写成功！");
-    } else {
-      jsonUtils.jsonBack(res, false, null, "内部出现了一点问题！");
-    }
-  }, schemeInfo);
+  //console.log(schemeInfo);
+   let update=schemeInfo.update;
+   if(update){
+       classTeacherDao.updateWorkPlan(function (result) {
+           if (result) {
+               jsonUtils.jsonBack(res, true, null, "班主任本学期工作计划更新成功！");
+           } else {
+               jsonUtils.jsonBack(res, false, null, "内部出现了一点问题！");
+           }
+       },schemeInfo)
+   }else{
+       classTeacherDao.fillWorkPlan(function(result) {
+           if (result) {
+               jsonUtils.jsonBack(res, true, null, "班主任本学期工作计划填写成功！");
+           } else {
+               jsonUtils.jsonBack(res, false, null, "内部出现了一点问题！");
+           }
+       }, schemeInfo);
+   }
 });
 
 /**
@@ -254,7 +264,7 @@ router.get("/classAwardList/:jobId", function(req, res) {
   let jobId = req.params.jobId;
   classTeacherDao.getClassAwardInfo(function(result) {
     if (result) {
-      jsonUtils.jsonBack(res, true, null, "学生获奖列表已返回！");
+      jsonUtils.jsonBack(res, true, result, "学生获奖列表已返回！");
     } else {
       jsonUtils.jsonBack(res, false, null, "内部出现了一点问题！");
     }
@@ -363,7 +373,13 @@ router.get('/dormitoryRecordList/:jobId',function (req,res) {
  */
 router.post('/fillViolationRecord',function (req,res) {
     let {studentId,violationDegree,violationContent,violationTime,classId}=req.body.violationRecord;
-    
+    classTeacherDao.fillVioInfo(function (result) {
+        if(result){
+            jsonUtils.jsonBack(res, true, null, "填写违纪记录表成功!");
+        }else{
+            jsonUtils.jsonBack(res, false, null, "内部发生错误!");
+        }
+    },studentId,violationDegree,violationContent,violationTime,classId)
 })
 
 /**
@@ -373,7 +389,13 @@ router.post('/fillViolationRecord',function (req,res) {
  */
 router.get('/getViolationRecordList/:jobId',function (req,res) {
     let jobId=req.params.jobId;
-
+    classTeacherDao.getClassViolationInfo(function (result) {
+        if(result!=='error'){
+            jsonUtils.jsonBack(res, true, result, "违纪记录表返回成功!");
+        }else{
+            jsonUtils.jsonBack(res, false, null, "内部发生错误!");
+        }
+    },jobId)
 })
 
 /**

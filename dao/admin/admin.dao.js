@@ -54,8 +54,7 @@ exports.getAllApplyForBedRoomChief = function(send){
             bedroomchiefapply.studentId,
             student.name,
             bedroomchiefapply.buildId,
-            bedroomchiefapply.bedRoomId,
-            bedroomchiefapply.applydate
+            bedroomchiefapply.bedRoomId
         FROM
             bedroomchiefapply,
             student
@@ -88,8 +87,8 @@ exports.getAllCollege = function (send) {
 }
 
 
-exports.getAllClassById = function (send,collegeId,currentPage,pageSize) {
-    let sql=`SELECT classId,className FROM class LIMIT ${pageSize} OFFSET ${(currentPage-1)*pageSize} WHERE collegeId=${collegeId}`;
+exports.getAllClassById = function (send,collegeId) {
+    let sql=`SELECT classId,className FROM class WHERE collegeId=${collegeId}`;
     db.query(sql,[],function (results,fields) {
         try {
             send(results);

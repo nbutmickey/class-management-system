@@ -211,7 +211,7 @@ exports.notApprovedPoor=function(send,studentId){
  *description:查看本班学生基本信息持久层操作
  *time:2018/12/9
  */
-exports.getBasicClassInfo = function(send, jobId) {
+exports.getBasicClassInfo = function(jobId) {
   let sql = `SELECT
             student.studentId,
             student.name,
@@ -234,15 +234,25 @@ exports.getBasicClassInfo = function(send, jobId) {
                 WHERE
                     classteacher.jobId = ${jobId}
             )`;
-  db.query(sql, [], function(results, fields) {
-    try {
-      send(results);
-    } catch (err) {
-      console.log(err);
-      results = "error";
-      send(results);
-    }
-  });
+
+  // db.query(sql, [], function(results, fields) {
+  //   try {
+  //     send(results);
+  //   } catch (err) {
+  //     console.log(err);
+  //     results = "error";
+  //     send(results);
+  //   }
+  // });
+  return new Promise(async(resolve, reject) => {
+      try {
+          await db.queryByPromise(sql,[]).then(results => {
+              resolve(results);
+          });
+      }catch (e) {
+        reject(e);
+      }
+  })
 };
 
 /**
@@ -359,6 +369,19 @@ exports.fillWorkPlan = function(send, info) {
     }
   });
 };
+
+
+exports.updateWorkPlan=function(send,info){
+    let sql=`UPDATE classteacherscheme SET content='${info.content}' WHERE semester='${info.semester}' AND jobId=${info.jobId}`;
+    db.query(sql, [], function(results, fields) {
+        try {
+            send(true);
+        } catch (err) {
+            console.log(err);
+            send(false);
+        }
+    });
+}
 /**
  *author:qxx
  *description:填写召开班会记录持久层操作
@@ -601,7 +624,7 @@ exports.getClassAwardInfo = function(send, jobId) {
             FROM
                 classteacher
             WHERE
-                classteacher.jobId = $ { jobId }
+                classteacher.jobId = ${ jobId }
         )`;
   db.query(sql, [], function(results, fields) {
     try {
@@ -613,6 +636,34 @@ exports.getClassAwardInfo = function(send, jobId) {
     }
   });
 };
+
+/**
+ *author:qxx
+ *description:填写本班学生违纪情况
+ *time:2019/2/19
+ */
+exports.fillVioInfo=function(send,studentId,violationDegree,violationContent,violationTime,classId){
+    let sql=`INSERT INTO violation (
+            studentId,
+            violationDegree,
+            violationContent,
+            violationTime,
+            classId
+        )
+        VALUES
+            (${studentId},${violationDegree},'${violationContent}','${violationTime}',${classId}
+            )`;
+    db.query(sql,[],function (result) {
+        try {
+            send(true)
+        }catch (e) {
+            console.log(e);
+            //result='error'
+            send(false);
+        }
+    })
+}
+
 /**
  *author:qxx
  *description:查看本班学生违纪情况持久层操作
@@ -628,7 +679,6 @@ exports.getClassViolationInfo = function(send, jobId) {
         FROM
             student,
             violation AS vio
-       
         WHERE
             vio.studentId = student.studentId
         AND vio.classId = (
@@ -698,6 +748,7 @@ exports.fillClassActivityInfo = function(send, info) {
     }
   });
 };
+
 
 /**
  *author:qxx

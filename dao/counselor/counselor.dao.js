@@ -1,8 +1,6 @@
 let db = require('../../DB/db');
 
-
-
-let getClassInfo=function(jobId){
+ let getClassInfo=async (jobId)=>{
     let sql=`SELECT
             counselorclasscontact.classId,
             class.className
@@ -13,17 +11,34 @@ let getClassInfo=function(jobId){
             class.classId=counselorclasscontact.classId
         AND
             counselorclasscontact.jobId = ?`;
-    return new Promise(function(resolve,reject){
-        db.query(sql,[jobId],function (results,field) {
-            try {
-                resolve(results)
-            }catch (err) {
-                reject(err)
+    return new Promise(async(resolve,reject)=>{
+        try {
+            let classResult=await db.queryByPromise(sql,jobId);
+            //var result=[]
+            for(let i=0;i<classResult;i++){
+                classResult[i]={
+                    classId:classResult[i].classId,
+                    className:classResult[i].className,
+                    stuInfo:[]
+                }
+                let stuInfo=await getStuInfo(classResult[i].classId);
+                classResult[i].stuInfo=stuInfo;
+                //result.push(classResult[i]);
+                resolve(classResult[i]);
             }
-        })
+        }catch (e) {
+           reject(e);
+        }
+        // db.query(sql,[jobId],function (results,field) {
+        //     try {
+        //         resolve(results)
+        //     }catch (err) {
+        //         reject(err)
+        //     }
+        // })
     })
 }
-let getStuInfo=function(classId){
+let getStuInfo=async(classId)=>{
     let sql=`SELECT
             DISTINCT awardinformation.studentId,
             student.name
@@ -34,14 +49,31 @@ let getStuInfo=function(classId){
             awardinformation.classId=?
         AND 
           awardinformation.studentId=student.studentId`;
-    return new Promise(function(resolve,reject){
-        db.query(sql,[classId],function (results,field) {
-            try {
-                resolve(results)
-            }catch (err) {
-                reject(err)
+    return new Promise(async(resolve,reject)=>{
+        try {
+            let stuInfo=db.queryByPromise(sql,classId);
+            for(let i=0;i<stuInfo.length;i++){
+                stuInfo[i]={
+                    stuName:stuInfo[i].name,
+                    studentId:stuInfo[i].studentId,
+                    awardInfo:[]
+                }
+                let awardInfo=await getStuAwardInfo(stuInfo[i].studentId);
+                stuInfo[i].awardInfo=awardInfo;
+                //console.log(stuInfo[i]);
             }
-        })
+            console.log(stuInfo);
+           resolve(stuInfo);
+        }catch (e) {
+           reject(e);
+        }
+        // db.query(sql,[classId],function (results,field) {
+        //     try {
+        //         resolve(results)
+        //     }catch (err) {
+        //         reject(err)
+        //     }
+        // })
     })
 }
 let getVioStuInfo=function(classId){
@@ -58,7 +90,7 @@ let getVioStuInfo=function(classId){
     return new Promise(function(resolve,reject){
         db.query(sql,[classId],function (results,field) {
             try {
-                resolve(results)
+               resolve(results)
             }catch (err) {
                 reject(err)
             }
@@ -66,7 +98,7 @@ let getVioStuInfo=function(classId){
     })
 }
 
-let getStuAwardInfo=function(studentId){
+let getStuAwardInfo=async(studentId)=>{
     let sql=`SELECT
             awardinformation.awardName,
             awardinformation.awardTime,
@@ -75,14 +107,21 @@ let getStuAwardInfo=function(studentId){
             awardinformation
         WHERE	
             awardinformation.studentId=?`;
+
     return  new Promise(function (resolve,reject) {
-        db.query(sql,[studentId],function (results,field) {
-            try {
-                resolve(results)
-            }catch (err) {
-                reject(err)
-            }
-        })
+        try {
+            let stuAwardList=db.queryByPromise(sql,studentId);
+            resolve(stuAwardList);
+        }catch (e) {
+            reject(e);
+        }
+        // db.query(sql,[studentId],function (results,field) {
+        //     try {
+        //         resolve(results)
+        //     }catch (err) {
+        //         reject(err)
+        //     }
+        // })
     })
 }
 
@@ -589,45 +628,59 @@ exports.getViolationByCounselor = function (send,jobId) {
  *description:查看自己管理的班级的学生的获奖情况的的持久层操作
  *time:2018/12/7
  */
-exports.getAwardByCounselor = function (send,jobId) {
-    //var allAwardInfo=[];
-    let awardInfoList=[];
-    getClassInfo(jobId).then((classResult)=>{
-        for(let i=0;i<classResult.length;i++){
-            let awardInfoByClass={
-                className:'',
-                classId:'',
-                stuInfo:[]
+exports.getAwardByCounselor = async(jobId)=> {
+    return new Promise(async(resolve,reject)=>{
+        try {
+            var list=[];
+            let awardInfoList=await getClassInfo(jobId);
+            for(let i=0;i<awardInfoList.length;i++)
+            {
+             list.push(awardInfoList)
             }
-            awardInfoByClass.classId=classResult[i].classId;
-            awardInfoByClass.className=classResult[i].className;
-            awardInfoList.push(awardInfoByClass);
+            //console.log(
+            // awardInfoList);
+            resolve(list);
+        }catch (e) {
+            reject(e);
         }
-
-        //console.log(awardInfoList);
-        for(let j=0;j<awardInfoList.length;j++){
-            getStuInfo(awardInfoList[j].classId).then((stuResult)=>{
-                for(let i=0;i<stuResult.length;i++){
-                    awardInfoList[j].stuInfo.push({stuName:stuResult[i].name,stuId:stuResult[i].studentId,Info:[]})
-                }
-                for(let k=0;k<awardInfoList[j].stuInfo.length;k++){
-                    getStuAwardInfo(awardInfoList[j].stuInfo[k].stuId).then((awardInfo)=>{
-                        for(let i=0;i<awardInfo.length;i++){
-                            awardInfoList[j].stuInfo[k].Info.push(awardInfo[i]);
-                        }
-                        //console.log(awardInfoList);
-                        //allAwardInfo=awardInfoList
-                    })
-                }
-
-            })
-        }
-        setTimeout(()=>{
-            //console.log(awardInfoList)
-            send(awardInfoList)
-        },1000);
-    },(err)=>{
-
     })
+
+    // getClassInfo(jobId).then((classResult)=>{
+    //     for(let i=0;i<classResult.length;i++){
+    //         let awardInfoByClass={
+    //             className:'',
+    //             classId:'',
+    //             stuInfo:[]
+    //         }
+    //         awardInfoByClass.classId=classResult[i].classId;
+    //         awardInfoByClass.className=classResult[i].className;
+    //         awardInfoList.push(awardInfoByClass);
+    //     }
+    //
+    //     //console.log(awardInfoList);
+    //     for(let j=0;j<awardInfoList.length;j++){
+    //         getStuInfo(awardInfoList[j].classId).then((stuResult)=>{
+    //             for(let i=0;i<stuResult.length;i++){
+    //                 awardInfoList[j].stuInfo.push({stuName:stuResult[i].name,stuId:stuResult[i].studentId,Info:[]})
+    //             }
+    //             for(let k=0;k<awardInfoList[j].stuInfo.length;k++){
+    //                 getStuAwardInfo(awardInfoList[j].stuInfo[k].stuId).then((awardInfo)=>{
+    //                     for(let i=0;i<awardInfo.length;i++){
+    //                         awardInfoList[j].stuInfo[k].Info.push(awardInfo[i]);
+    //                     }
+    //                     //console.log(awardInfoList);
+    //                     //allAwardInfo=awardInfoList
+    //                 })
+    //             }
+    //
+    //         })
+    //     }
+    //     setTimeout(()=>{
+    //         //console.log(awardInfoList)
+    //         send(awardInfoList)
+    //     },1000);
+    // },(err)=>{
+    //
+    // })
     //console.log(awardInfoList);
 }

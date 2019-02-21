@@ -28,5 +28,32 @@ module.exports = {
                 })
             })
         })
+    },
+    queryByPromise:function (sql,params) {
+        return new Promise((resolve, reject) =>{
+            let connection = mysql.createConnection(databaseConfig);
+            try {
+
+            connection.connect(function (err) {
+                if(err){
+                    console.log("好惨啊，数据库连接失败了！");
+                   throw err;
+                }
+                connection.query(sql,params,function (err,result) {
+                    if(err){
+                        throw err;
+                    }
+                    resolve(result);
+                    connection.end(function (err) {
+                        if(err){
+                           throw err;
+                        }
+                    })
+                })
+            })
+            }catch (e) {
+                reject(e);
+            }
+        })
     }
 }

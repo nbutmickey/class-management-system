@@ -114,15 +114,15 @@ router.get('/allStuVioList/:jobId',function (req,res) {
  *description:根据jobId查看辅导员管理的所有班级的学生获奖情况
  *time:2018/12/7
  */
-router.get('/allStuAwardList/:jobId',function (req,res) {
+router.get('/allStuAwardList/:jobId',async(req,res)=>{
     let jobId=req.params.jobId;
-    counselorDao.getAwardByCounselor(function (result) {
-        if(result!=='error'){
-            jsonUtils.jsonBack(res,true,result,'获奖信息列表拉取成功！');
-        }else{
-            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
-        }
-    },jobId)
+    try {
+        let result=await counselorDao.getAwardByCounselor(jobId);
+        //console.log(result);
+        jsonUtils.jsonBack(res,true,result,'获奖信息列表拉取成功！');
+    }catch (e) {
+        jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+    }
 })
 
 module.exports =router;

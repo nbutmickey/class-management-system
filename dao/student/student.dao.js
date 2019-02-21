@@ -72,7 +72,14 @@ exports.getCountsByStudentId=function(send,studentId){
 }
 
 exports.insertstudentInfo = function (send,info) {
-    let sql =`INSERT INTO student(studentId,name,sex,collegeId,classId,birthplace,birthday,partySituation,contact,position,other) VALUES (${info.studentId},'${info.name}','${info.sex}',${info.collegeId},${info.classId},'${info.birthplace}','${info.birthday}','${info.partySituation}','${info.contact}','${info.position}','${info.other}')`;
+    let sql =`INSERT INTO student(studentId,name,sex,collegeId,classId,birthplace,birthday,partySituation,contact,position,other) VALUES (${info.studentId},'${info.name}','${info.sex}',${info.collegeId},${info.classId},'${info.birthplace}','${info.birthday}','${info.partySituation}','${info.contact}','${info.position}','${info.other}');
+              INSERT INTO bedroomsituation (
+                studentId,
+                bedroomChief,
+                bedRoomId,
+                buildId
+            )
+            VALUES(${info.studentId},0,${info.bedRoomId},${info.buildId})`;
     db.query(sql,[],function (results,fields) {
         try{
             send(true);
