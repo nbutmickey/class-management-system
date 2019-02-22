@@ -81,16 +81,14 @@ router.get('/allPoorList/:jobId',function (req,res) {
  *description:根据jobId查看辅导员管理的所有班级的班委信息
  *time:2018/12/7
  */
-router.get('/classCommitList/:jobId',function (req,res) {
+router.get('/classCommitList/:jobId',async(req,res)=>{
     let jobId=req.params.jobId;
-    let data={};
-    counselorDao.getClassCommitteeByCounselor(function (result) {
-        if(result!=='error'){
-            jsonUtils.jsonBack(res,true,result,'获取所有班委信息成功！');
-        }else{
-            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
-        }
-    },jobId)
+    try {
+        let result=await counselorDao.getViolationByCounselor(jobId);
+        jsonUtils.jsonBack(res,true,result,'班委信息拉取成功！');
+    }catch (e) {
+        jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+    }
 })
 
 /**
@@ -99,15 +97,14 @@ router.get('/classCommitList/:jobId',function (req,res) {
  *description:根据jobId查看辅导员管理的所有班级的学生违纪情况
  *time:2018/12/7
  */
-router.get('/allStuVioList/:jobId',function (req,res) {
+router.get('/allStuVioList/:jobId',async(req,res)=>{
     let jobId=req.params.jobId;
-    counselorDao.getViolationByCounselor(function (result) {
-        if(result!=='error'){
-            jsonUtils.jsonBack(res,true,result,'学生违纪情况列表拉取成功！');
-        }else{
-            jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
-        }
-    },jobId)
+    try {
+        let result=await counselorDao.getViolationByCounselor(jobId);
+        jsonUtils.jsonBack(res,true,result,'违纪信息拉取成功！');
+    }catch (e) {
+        jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
+    }
 })
 /**
  *author:qxx
@@ -121,6 +118,7 @@ router.get('/allStuAwardList/:jobId',async(req,res)=>{
         //console.log(result);
         jsonUtils.jsonBack(res,true,result,'获奖信息列表拉取成功！');
     }catch (e) {
+        //console.log(e);
         jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');
     }
 })

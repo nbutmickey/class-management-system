@@ -105,9 +105,11 @@ exports.getAllBuildInfo=function (send,currentPage,pageSize) {
             SELECT build,bedRoomId,addr,hygieneSituation FROM dormitory LIMIT ${pageSize} OFFSET ${(currentPage-1)*pageSize};`;
     db.query(sql,[],function (results) {
         try {
+            console.log(results);
             var result={};
             result.total= results[0][0]['COUNT(*)'];
-            result.data=results[1];
+            result.data=JSON.parse(JSON.stringify(results[1]));
+            console.log(result.data);
             send(result);
         }catch(err){
             console.log(err);
