@@ -84,7 +84,8 @@ router.get('/allPoorList/:jobId',function (req,res) {
 router.get('/classCommitList/:jobId',async(req,res)=>{
     let jobId=req.params.jobId;
     try {
-        let result=await counselorDao.getViolationByCounselor(jobId);
+        let result=await counselorDao.getClassCommitteeByCounselor(jobId);
+        //console.log(result);
         jsonUtils.jsonBack(res,true,result,'班委信息拉取成功！');
     }catch (e) {
         jsonUtils.jsonBack(res,false,null,'内部出现了一点问题！');

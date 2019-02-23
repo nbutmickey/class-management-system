@@ -2,15 +2,17 @@ let db = require('../../DB/db');
 
  let getClassInfo=async (jobId)=>{
     let sql=`SELECT
+            college.collegeName,
             counselorclasscontact.classId,
             class.className
         FROM
             counselorclasscontact,
-            class
-        WHERE	
-            class.classId=counselorclasscontact.classId
-        AND
-            counselorclasscontact.jobId = ?`;
+            class,
+            college
+        WHERE
+            class.classId = counselorclasscontact.classId
+        AND class.collegeId = college.collegeId
+        AND counselorclasscontact.jobId = ?`;
     return new Promise(async(resolve,reject)=>{
         try {
             let classResult=await db.queryByPromise(sql,jobId);
@@ -33,7 +35,6 @@ let getStuInfo=async(classId)=>{
         AND 
           awardinformation.studentId=student.studentId`;
     return new Promise(async(resolve,reject)=>{
-        //console.log(classId);
         try {
             let stuInfo=await db.queryByPromise(sql,classId);
             let parseReuslt=JSON.parse(JSON.stringify(stuInfo));
@@ -463,9 +464,6 @@ let geCommitteeInfo=async(classId)=>{
             let classCommittee=[];
             if(parseResult.length!==0){
                 let row={
-                    collegeName:'',
-                    classId:'',
-                    className:'',
                     monitor:'',
                     communistParty:'',
                     associateMonitor:'',
@@ -477,7 +475,6 @@ let geCommitteeInfo=async(classId)=>{
                     organize:'',
                     security:''
                 }
-                row.collegeName=parseResult[0].collegeName;
                 for(let i=0;i<parseResult.length;i++){
                     let position = parseResult[i].position;
                     let stuName = parseResult[i].name;
@@ -502,8 +499,8 @@ let geCommitteeInfo=async(classId)=>{
                     } else if (position === '治保委员') {
                         row.security = stuName;
                     }
-                    classCommittee.push(row);
                 }
+                classCommittee.push(row)
             }
             resolve(classCommittee);
         }catch (e) {
@@ -518,23 +515,24 @@ let geCommitteeInfo=async(classId)=>{
  *time:2018/12/7
  */
 exports.getClassCommitteeByCounselor = async (jobId)=> {
-    try {
-        let classInfo=await getClassInfo(jobId);
-        for(let i=0;i<classInfo.length;i++){
-            classInfo[i].classCommittee=[];
-            let classComiitteeInfo=await geCommitteeInfo(classInfo[i].classId);
-            if(classComiitteeInfo.length!==0){
-                console.log(classComiitteeInfo);
-                classComiitteeInfo.forEach(item=>{
-                    classInfo[i].classCommittee.push(item);
-                })
+    return new Promise(async(resolve,reject)=>{
+        try {
+            let classInfo=await getClassInfo(jobId);
+            for(let i=0;i<classInfo.length;i++){
+                classInfo[i].classCommittee=[];
+                let classComiitteeInfo=await geCommitteeInfo(classInfo[i].classId);
+                if(classComiitteeInfo.length!==0){
+                    //console.log(classComiitteeInfo);
+                    classComiitteeInfo.forEach(item=>{
+                        classInfo[i].classCommittee.push(item);
+                    })
+                }
             }
+            resolve(classInfo);
+        }catch (e) {
+            reject(e);
         }
-        resolve(classInfo);
-    }catch (e) {
-
-    }
-
+    })
 }
 
 /**

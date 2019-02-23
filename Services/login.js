@@ -33,17 +33,17 @@ router.post('/getUserInfo',function (req,res) {
                      res.json({
                          success:true,
                          username:'Mickey',
-                         roles:loginType,
-                         account:account
+                         roles:loginType,//['admin']
+                         account:account//9999999
                      })
                 }else if(role==='student'){
                     studentDao.getStudentByAccount(account,function (result) {
                         if(result!=='error'){
                             res.json({
                                 success:true,
-                                username:result.name,
-                                roles:loginType,
-                                account:account
+                                username:result.name,//'梁鑫'
+                                roles:loginType,//['student']
+                                account:account//1740119024
                             })
                         }
                     })

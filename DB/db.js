@@ -33,7 +33,6 @@ module.exports = {
         return new Promise((resolve, reject) =>{
             let connection = mysql.createConnection(databaseConfig);
             try {
-
             connection.connect(function (err) {
                 if(err){
                     console.log("好惨啊，数据库连接失败了！");

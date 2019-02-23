@@ -98,7 +98,9 @@ router.get("/bedRoomApplyChiefStepById/:studentId", function(req, res) {
  */
 router.get("/getPersonalInfo/:studentId", function(req, res) {
   let studentId = req.params.studentId;
+
   studentDao.getStudentInfoById(function(result) {
+     //对生日信息进行格式化
     result.birthday = moment(result.birthday).format("YYYY-MM-DD");
     if (result !== "error") {
       jsonUtils.jsonBack(res, true, result, "个人信息拉取成功！");
