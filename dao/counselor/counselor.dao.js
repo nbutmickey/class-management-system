@@ -321,7 +321,7 @@ exports.getClassAllStuInfo = function (send,jobId,currentPage,pageSize) {
     db.query(sql,[],function (results,fields) {
         try {
             var result={};
-            result.total= results[0][0]['COUNT(*)'];
+            result.total= results[0]['COUNT(*)'];
             result.data=results[1];
             send(result);
         }catch(err){
@@ -587,7 +587,7 @@ exports.getAwardByCounselor = async(jobId)=> {
                     })
                 }
                 if(classInfo[i].stuInfo.length!==0){
-                    console.log(classInfo[i].stuInfo);
+                    //console.log(classInfo[i].stuInfo);
                     for(let j=0;j<stuInfo.length;j++){
                         let awardInfo=await getStuAwardInfo(stuInfo[j].studentId);
                         classInfo[i].stuInfo[j].Info=[];

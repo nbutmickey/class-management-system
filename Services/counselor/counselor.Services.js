@@ -27,7 +27,7 @@ router.get('/allStudentList/:jobId',function (req,res) {
  *time:2018/12/7
  */
 router.post('/approvedPoor',function (req,res) {
-    let { studentId,attitude }=req.body.poorAttitude;
+    let { studentId,attitude}=req.body.poorAttitude;
     if(attitude){
         counselorDao.approveApplyForPoorByCounselor(function (result) {
                 if(result){

@@ -3,15 +3,20 @@ let db = require("../../DB/db");
 /**
  *author:qxx
  *description:检验jobId是否重复的持久层操作
+ *该函数的功能是校验前端录入班主任信息的时候，查询数据库检验是否有重复班主任记录
+ * 该函数传入两个参数，一个是回调函数（send），一个是jobId
  *time:2019/1/27
  */
+
 exports.getCountsByClassTeacherId = function(send, jobId) {
   let sql = `SELECT COUNT(*) AS count FROM classteacher WHERE jobId=${jobId}`;
   db.query(sql, [], function(results) {
     try {
+        //如果查询结果集的count字段值为1，则表示改工号存在重复，在回调函数中传入false
       if (results[0].count >= 1) {
         send(false);
       } else {
+          //如果查询结果集的count字段值为0，则表示改工号不存在重复，在回调函数中传入true
         send(true);
       }
     } catch (err) {
@@ -22,13 +27,14 @@ exports.getCountsByClassTeacherId = function(send, jobId) {
 };
 /**
  *author:qxx
- *description:
+ *description:根据jobId查询班主任姓名
  *time:2019/1/27
  */
 exports.getclassteacherByAccount = function(jobId, send) {
   let sql = `SELECT name FROM classteacher WHERE jobId=${jobId}`;
   db.query(sql, [], function(results, fields) {
     try {
+        //由于结果集是一个数组，则返回数组的第一个元素
       send(results[0]);
     } catch (err) {
       console.log(err);
@@ -43,9 +49,9 @@ exports.getclassteacherByAccount = function(jobId, send) {
  *time:2018/12/3
  */
 exports.insertclassteacherInfo = function(send, info) {
-  let sql = `INSERT INTO classteacher(jobId,name,collegeId,classId) VALUES (${
-    info.jobId
-  },'${info.name}',${info.collegeId},${info.classId})`;
+  let sql = `INSERT INTO classteacher(jobId,name,collegeId,classId) VALUES (${info.jobId},'${info.name}',${info.collegeId},${info.classId})`;
+    //query函数中的[]指的是需要传入sql语句的参数，
+    // 但是这里我们利用ES6的模板字符串来构建一条sql完整的语句，不需要再传入参数
   db.query(sql, [], function(results, fields) {
     try {
       send(true);
@@ -62,11 +68,8 @@ exports.insertclassteacherInfo = function(send, info) {
  *time:2018/12/3
  */
 exports.updateclasstecacherInfo = function(send, info) {
-  let sql = `UPDATE counselor SET jobId=${info.jobId},name='${
-    info.name
-  }',collegeId=${info.collegeId},classId=${info.classId} WHERE jobId=${
-    info.jobId
-  }`;
+    //根据jobId更新指定班主任信息
+  let sql = `UPDATE counselor SET jobId=${info.jobId},name='${info.name}',collegeId=${info.collegeId},classId=${info.classId} WHERE jobId=${info.jobId}`;
   db.query(sql, [], function(results, fields) {
     try {
       send(true);
@@ -100,6 +103,7 @@ exports.deleteclassteacherInfo = function(send, jobId) {
  *time:2018/12/3
  */
 exports.getSingleclassteacherInfo = function(send, jobId) {
+   //sql语句中连接classteacher 表和class表来获取班主任信息以及其所管理的班级信息
   let sql = `SELECT classteacher.*,class.* FROM classteacher,class WHERE classteacher.classId=class.classId AND classteacher.jobId=${jobId}`;
   db.query(sql, [], function(results, fields) {
     try {
@@ -117,6 +121,9 @@ exports.getSingleclassteacherInfo = function(send, jobId) {
  *time:2018/12/3
  */
 exports.getAllclassteacherInfo = function(send, currentPage, pageSize) {
+    //获取分页信息主要是在sql语句进行处理
+    // 利用LIMIT和OFFSET语句来限制查询结果集的大小，参数（currentPage-1）*pageSize主要用来控制偏移量
+    // 即从何处开始截取，pageSize用来控制数据集大小，即一页容量
   let sql = `SELECT classteacher.*,class.* FROM classteacher,class LIMIT ${pageSize} OFFSET (${currentPage}-1)*${pageSize} WHERE classteacher.classId=class.classId`;
   db.query(sql, [], function(results, fields) {
     try {
@@ -136,6 +143,8 @@ exports.getAllclassteacherInfo = function(send, currentPage, pageSize) {
  *time:2019/2/19
  */
 exports.getClassPoorCheck=function(send,jobId){
+    //sql语句中主要连接了poorstudentapply和student表，限制条件为poorstudentapply中的agree字段值为1以及学生班级Id
+    //学生班级ID需要根据jobId进行查询
     let sql=`SELECT
             poorstudentapply.studentId,
             student.name,
@@ -173,10 +182,11 @@ exports.getClassPoorCheck=function(send,jobId){
  *time:2019/2/19
  */
 exports.approvedPoor=function(send,studentId){
-    let sql=`UPDATE poorstudentapply
-            SET agree =-3
+    //通过贫困生申请则需要设置agree=2
+    let sql = `UPDATE poorstudentapply
+            SET agree =2
             WHERE
-	        studentId = ${studentId}`
+	        studentId = ${studentId}`;
     db.query(sql,[],function (result) {
         try {
             send(true);
@@ -192,6 +202,7 @@ exports.approvedPoor=function(send,studentId){
  *time:2019/2/19
  */
 exports.notApprovedPoor=function(send,studentId){
+    //班主任不同意则需要设置agree=-2
     let sql=`UPDATE poorstudentapply
             SET agree =-2
             WHERE
@@ -212,6 +223,7 @@ exports.notApprovedPoor=function(send,studentId){
  *time:2018/12/9
  */
 exports.getBasicClassInfo = function(jobId) {
+    //原理与获取需要审批的贫困生信息相同
   let sql = `SELECT
             student.studentId,
             student.name,
@@ -234,18 +246,14 @@ exports.getBasicClassInfo = function(jobId) {
                 WHERE
                     classteacher.jobId = ${jobId}
             )`;
-
-  // db.query(sql, [], function(results, fields) {
-  //   try {
-  //     send(results);
-  //   } catch (err) {
-  //     console.log(err);
-  //     results = "error";
-  //     send(results);
-  //   }
-  // });
+    //这里返回一个Promsie，Promise传入一个函数，
+    // Promise就是一个用于存储状态的容器，它可以将异步操作的流程以同步操作的流程表达出来
+    // 相比较于回调函数更加优雅。其状态有三种：pending、fufiled，rejected
+    // 状态只能由pending->fufiled（利用resolve处理结果）和pending->rejected（利用reject处理错误），一旦状态改变就不会在变。
+    // async表示这是一个异步函数，函数中的await语句必须在async函数中执行，否则报错
   return new Promise(async(resolve, reject) => {
       try {
+          //调用数据库中的queryPromise函数,对结果进行处理，如果出现异常则reject异常，否则resolve结果集，供services层调用
           await db.queryByPromise(sql,[]).then(results => {
               resolve(results);
           });
@@ -278,6 +286,7 @@ exports.setClassPosition = function(send, position, studentId) {
  *time:2018/12/9
  */
 exports.getClassPoor = function(send, jobId) {
+   //由于poorstudentapply表中的agree =3则表示通过了辅导员申请，所以限制条件为agree=3
   let sql = `SELECT
                 poorstudentapply.studentId,
 								student.name,
@@ -372,6 +381,7 @@ exports.fillWorkPlan = function(send, info) {
 
 
 exports.updateWorkPlan=function(send,info){
+    //sql语句中的限制条件为semester和jobId，即根据学期和工号去更新班主任工作计划
     let sql=`UPDATE classteacherscheme SET content='${info.content}' WHERE semester='${info.semester}' AND jobId=${info.jobId}`;
     db.query(sql, [], function(results, fields) {
         try {
@@ -558,11 +568,7 @@ WHERE
  */
 exports.fillEmergenciesRecord = function(send, info) {
   let sql = `INSERT INTO emergencyrecord(jobId,eventName,time,addr,mainContent,solve,result,studentNames) 
-            VALUES(${info.jobId},'${info.eventName}','${info.time}','${
-    info.addr
-  }','${info.mainContent}','${info.solve}','${info.result}','${
-    info.studentNames
-  }')`;
+            VALUES(${info.jobId},'${info.eventName}','${info.time}','${info.addr}','${info.mainContent}','${info.solve}','${info.result}','${info.studentNames}')`;
   db.query(sql, [], function(results, fields) {
     try {
       send(true);
@@ -707,9 +713,7 @@ exports.getClassViolationInfo = function(send, jobId) {
  */
 exports.fillBedRoomHygieneInfo = function(send, info) {
   let sql = `INSERT INTO bedroomhygiene(jobId,semester,week,state,buildId,bedRoomId) 
-            VALUES(${info.jobId},'${info.semester}',${info.week},'${
-    info.state
-  }',${buildId},${bedRoomId})`;
+            VALUES(${info.jobId},'${info.semester}',${info.week},'${info.state}',${buildId},${bedRoomId})`;
   db.query(sql, [], function(results, fields) {
     try {
       send(true);
@@ -736,9 +740,7 @@ exports.fillClassActivityInfo = function(send, info) {
         mainContent
     )
     VALUES
-        (${info.jobId},'${info.activityTime}','${info.activityAddr}',${
-    info.participateNumber
-  },${info.isJoin},'${info.mainContent}')`;
+        (${info.jobId},'${info.activityTime}','${info.activityAddr}',${info.participateNumber},${info.isJoin},'${info.mainContent}')`;
   db.query(sql, [], function(result) {
     try {
       send(true);
