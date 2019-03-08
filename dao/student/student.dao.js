@@ -230,7 +230,7 @@ exports.updateApplyBedRoomChief=function(send,studentId){
  *time:2018/12/4
  */
 exports.applyForPoor = function (send,info) {
-    let sql=`INSERT INTO poorstudentapply(studentId,agree,degree,reason) VALUES(${info.studentId},1,'${info.degree}','${info.reason}')`;
+    let sql=`INSERT INTO poorstudentapply(studentId,agree,degree,reason,classId) VALUES(${info.studentId},1,'${info.degree}','${info.reason}',${info.classId})`;
     db.query(sql,[],function (results,fields) {
         try {
             send(true)
